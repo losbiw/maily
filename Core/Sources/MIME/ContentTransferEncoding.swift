@@ -18,7 +18,7 @@ public enum ContentTransferEncoding: String, CaseIterable, CustomStringConvertib
     // MARK: RawRepresentable
     public init?(rawValue: String) {
         let rawValue: String = rawValue.lowercased().trimmed()
-        guard let encoding: Self = Self.allCases.filter({ $0.rawValue == rawValue }).first else {
+        guard let encoding: Self = Self.allCases.first(where: { $0.rawValue == rawValue }) else {
             return nil
         }
         self = encoding

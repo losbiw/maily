@@ -16,7 +16,7 @@ public final class AccountManager {
     public var isJMAPAvailable: Bool = false
 
     public func account(for id: UUID) -> Account? {
-        allAccounts.filter({ $0.id == id }).first
+        allAccounts.first(where: { $0.id == id })
     }
 
     public func set(_ account: Account, at index: Int? = nil) {

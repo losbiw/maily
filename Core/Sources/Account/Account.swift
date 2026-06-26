@@ -35,7 +35,7 @@ public struct Account: Codable, Equatable, Hashable, Identifiable {
     }
 
     public func server(_ serverProtocol: ServerProtocol) -> Server? {
-        servers.filter { $0.serverProtocol == serverProtocol }.first
+        servers.first(where: { $0.serverProtocol == serverProtocol })
     }
 
     /// Configure an `Account` using ``Autoconfiguration.EmailProvider``.
@@ -78,6 +78,7 @@ extension Account {
     /// Autoconfigure a new `Account`.
     public static func autoconfig(_ emailAddress: String, isJMAPAvailable: Bool = false) async throws -> Self {
         do {
+            // TODO: un-hardcode fastmail from this. Just need to figure out where the JMAP-compatible hosts would be stored
             if isJMAPAvailable, try emailAddress.host == "fastmail.com" {
                 return Account(
                     name: emailAddress,
@@ -90,6 +91,7 @@ extension Account {
                             connectionSecurity: .tls,
                             authenticationType: .password,
                             username: emailAddress,
+                            // TODO: un-hardcode here too
                             hostname: "api.fastmail.com"
                         )
                     ]

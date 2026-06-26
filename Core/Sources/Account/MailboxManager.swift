@@ -16,11 +16,11 @@ public final class MailboxManager {
     }
 
     public func mailbox(_ name: String) -> Mailbox? {
-        mailboxes.filter({ $0.name == name }).first
+        mailboxes.first(where: { $0.name == name })
     }
 
     public func mailbox(for id: String) -> Mailbox? {
-        mailboxes.filter({ $0.id == id }).first
+        mailboxes.first(where: { $0.id == id })
     }
 
     public func emails(in mailbox: Mailbox) async -> [Email] {

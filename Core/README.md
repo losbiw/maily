@@ -113,7 +113,7 @@ For the authenticated client, list mailboxes and select inbox:
 
 ```swift
 let mailboxes: [Mailbox] = try await client.list().map { $0.0 }  // List mailboxes
-guard let inbox: Mailbox = mailboxes.filter({ $0.path.name.isInbox }).first else {
+guard let inbox: Mailbox = mailboxes.first(where: { $0.path.name.isInbox }) else {
     throw IMAPError.unexpectedResponse("Inbox not found")
 }  // Find inbox in mailbox list
 try await client.select(mailbox: inbox)  // Select inbox
