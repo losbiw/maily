@@ -13,7 +13,9 @@ import Account
 
 struct EmailListView: View {
     @Environment(Accounts.self) private var accounts: Accounts
+    // TODO: replace with actual emails
     let tempEmails = TempEmail.sampleData
+    // TODO: why is this even here?
     @State var editMode: EditMode = .inactive
     @State private var selections = Set<UUID>()
     @State private var showDrawer = false

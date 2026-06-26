@@ -12,6 +12,7 @@ extension URLSession {
             return (config, source)
         }
         guard queryMX else {
+            // FIXME: I'm not sure why we're throwing "file doesn't exist" here. There has to be a better error code
             throw URLError(.fileDoesNotExist)
         }
         let records: [MXRecord] = try await DNSResolver.queryMX(emailAddress)
@@ -25,13 +26,16 @@ extension URLSession {
     /// Query a single autoconfig source using  a given email address.
     public func autoconfig(_ emailAddress: String, source: Source) async throws -> (config: ClientConfig, data: (Data, Data)) {
         let url: URL = try .autoconfig(emailAddress, source: source)
-        let data: (Data, URLResponse) = try await data(from: url)
-        switch (data.1 as? HTTPURLResponse)?.statusCode {
+        let (data, urlResponse) = try await data(from: url)
+        
+        switch (urlResponse as? HTTPURLResponse)?.statusCode {
         case 200:
-            let json: Data = try XMLToJSONParser(emailAddress, data: data.0).data
+            // FIXME: why do are we assuming the request is always going to have a JSON body?
+            let json: Data = try XMLToJSONParser(emailAddress, data: data).data
             let container: Container = try JSONDecoder().decode(Container.self, from: json)
-            return (container.clientConfig, (json, data.0))
+            return (container.clientConfig, (json, data))
         case 404:
+            // FIXME: same here, I'm sure there has to be a more fitting error code than file doesn't exist
             throw URLError(.fileDoesNotExist)
         default:
             throw URLError(.unsupportedURL)
@@ -52,8 +56,8 @@ extension URLSession {
     }
 
     func suffixList() async throws -> [String] {
-        let data: (Data, URLResponse) = try await data(from: .suffixList)
-        let suffixList: [String] = try SuffixListParser(data: data.0).suffixList
+        let (data, urlResponse) = try await data(from: .suffixList)
+        let suffixList: [String] = try SuffixListParser(data: data).suffixList
         return suffixList
     }
 }

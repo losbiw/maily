@@ -16,7 +16,8 @@ struct App: SwiftUI.App {
         WindowGroup {
             ZStack {
                 ContentView()
-                    .environment(accounts).environment(featureFlags)
+                    .environment(accounts)
+                    .environment(featureFlags)
                 if showAlert {
                     FeatureNotImplementedView()
                 }
