@@ -6,7 +6,8 @@ import Account
 import SwiftUI
 
 @main
-struct App: SwiftUI.App {
+struct App: SwiftUI.App {    
+    @State private var store: LocalStore = try LocalStore()
     @State private var accounts: Accounts = Accounts()
     @State private var showAlert = false
     @State private var featureFlags: FeatureFlags = FeatureFlags(distribution: .current)

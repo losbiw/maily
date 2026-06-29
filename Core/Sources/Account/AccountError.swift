@@ -4,7 +4,7 @@
 
 public enum AccountError: CustomStringConvertible, Error, Equatable {
     case autoconfig(Error)
-    case fileManager(Error)
+    case GRDB(Error)
     case imap(IMAPError)
     case jmap(JMAPError)
     case mime(MIMEError)
@@ -33,7 +33,7 @@ public enum AccountError: CustomStringConvertible, Error, Equatable {
     public var description: String {
         switch self {
         case .autoconfig(let error): "Autoconfiguration: \(error)"
-        case .fileManager(let error): "FileManager: \(error)"
+        case .GRDB(let error): "GRDB: \(error)"
         case .imap(let error): "IMAP: \(error)"
         case .jmap(let error): "JMAP: \(error)"
         case .mime(let error): "MIME: \(error)"

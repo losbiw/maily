@@ -63,7 +63,8 @@ let package: Package = Package(
         .package(url: "https://github.com/apple/swift-nio-extras", branch: "main"),
         .package(url: "https://github.com/apple/swift-nio-imap", branch: "main"),
         .package(url: "https://github.com/apple/swift-nio-ssl", branch: "main"),
-        .package(url: "https://github.com/apple/swift-nio-transport-services", branch: "main")
+        .package(url: "https://github.com/apple/swift-nio-transport-services", branch: "main"),
+        .package(url: "https://github.com/groue/GRDB.swift.git", branch: "master")
     ],
     targets: [
         .target(
@@ -74,7 +75,8 @@ let package: Package = Package(
                 "IMAP",
                 "JMAP",
                 "MIME",
-                "SMTP"
+                "SMTP",
+                .product(name: "GRDB", package: "GRDB.swift")
             ]),
         .testTarget(
             name: "AccountTests",

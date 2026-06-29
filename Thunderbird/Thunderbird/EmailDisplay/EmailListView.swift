@@ -15,25 +15,13 @@ struct EmailListView: View {
     @Environment(Accounts.self) private var accounts: Accounts
     // TODO: replace with actual emails
     let tempEmails = TempEmail.sampleData
+    @State private var session: UserSession = UserSession(store: , accounts: Accounts.self)
+    @State private var mailbox: MailboxManager = MailboxManager()
     // TODO: why is this even here?
     @State var editMode: EditMode = .inactive
     @State private var selections = Set<UUID>()
     @State private var showDrawer = false
     @State private var path = NavigationPath()
-
-    //Hardcoded for testing
-    let attributedString = try? NSMutableAttributedString(
-        data: Data(
-            """
-            <html>
-            <body>
-            <h2>This is a test email with a bit of text</h2>
-            <p>Its doing its best to model how an email might look</p>
-            </body>
-            </html>
-            """.utf8),
-        options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil
-    )
 
     func sortEmails() {
         //Not yet implemented

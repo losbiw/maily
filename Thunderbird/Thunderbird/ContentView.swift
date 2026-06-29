@@ -16,7 +16,6 @@ struct ContentView: View {
             if hasAuthorization {
                 EmailListView()
                     .environment(accounts)
-
             } else {
                 NavigationStack {
                     WelcomeScreen($isPresented)
@@ -25,9 +24,7 @@ struct ContentView: View {
                     ManualAccount()
                 }
                 .presentationDragIndicator(.visible)
-
             }
-
         }
         .onChange(of: accounts.allAccounts, initial: true) {
             guard !accounts.allAccounts.isEmpty else {
@@ -45,7 +42,8 @@ struct ContentView: View {
 }
 
 #Preview("Content View") {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var store: LocalStore = LocalStore()
+    @Previewable @State var accounts: Accounts = Accounts(store: store)
 
     ContentView().environment(accounts)
 }

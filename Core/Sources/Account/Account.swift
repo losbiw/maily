@@ -9,8 +9,9 @@
 @_exported import MIME
 @_exported import SMTP
 import Foundation
+import GRDB
 
-public struct Account: Codable, Equatable, Hashable, Identifiable {
+public struct Account: Codable, Equatable, Hashable, Identifiable, FetchableRecord, PersistableRecord {
     public enum EmailProtocol: String, CaseIterable, CustomStringConvertible, Identifiable {
         case imap = "IMAP/SMTP"
         case jmap = "JMAP"

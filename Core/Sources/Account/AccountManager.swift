@@ -11,6 +11,7 @@ public typealias Accounts = AccountManager
 public final class AccountManager {
     public private(set) var allAccounts: [Account] = []
     public var error: AccountError?
+    private var store: LocalStore
 
     /// Feature flag enables autoconfiguring new accounts using [JMAP](https://jmap.io), when supported by email provider.
     public var isJMAPAvailable: Bool = false
@@ -21,6 +22,8 @@ public final class AccountManager {
 
     public func set(_ account: Account, at index: Int? = nil) {
         error = nil
+        let backupAccounts = allAccounts
+        
         do {
             var accounts: [Account] = allAccounts
             let currentIndex: Int? = accounts.firstIndex { account.id == $0.id }
@@ -33,39 +36,43 @@ public final class AccountManager {
             } else {
                 accounts.append(account)  // Append to end of array
             }
-            try FileManager.default.write(accounts, to: .accounts)
-            allAccounts = try FileManager.default.readAccounts(from: .accounts)
+            
+            try store.saveAccounts(accounts)
+            allAccounts = try store.loadAccounts()
         } catch {
-            self.error = .fileManager(error)
+            // revert previous mutations
+            allAccounts = backupAccounts
+            self.error = .GRDB(error)
         }
     }
 
     public func delete(_ account: Account) {
         error = nil
         do {
-            try FileManager.default.write(allAccounts.filter { $0.id != account.id }, to: .accounts)
-            allAccounts = try FileManager.default.readAccounts(from: .accounts)
+            try store.deleteAccount(account.id)
+            allAccounts = try store.loadAccounts()
         } catch {
-            self.error = .fileManager(error)
+            self.error = .GRDB(error)
         }
     }
 
     public func deleteAccounts() {
         error = nil
         do {
-            try FileManager.default.write([], to: .accounts)
+            try store.deleteAllAccounts()
             allAccounts = []
         } catch {
-            self.error = .fileManager(error)
+            self.error = .GRDB(error)
         }
     }
 
-    public init() {
+    public init(store: LocalStore) {
+        self.store = store
+        
         do {
-            guard try FileManager.default.fileExists(at: .accounts) else { return }
-            allAccounts = try FileManager.default.readAccounts(from: .accounts)
+            allAccounts = try store.loadAccounts()
         } catch {
-            self.error = .fileManager(error)
+            self.error = .GRDB(error)
         }
     }
 }
