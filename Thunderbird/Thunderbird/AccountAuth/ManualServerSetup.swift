@@ -27,7 +27,7 @@ struct ManualServerSetup: View {
         self.outGoingPort = tempAccount.outgoingServer?.port
     }
 
-    @Environment(Accounts.self) private var accounts: Accounts
+    @Environment(AccountManager.self) private var accountManager: AccountManager
     @Environment(LoginDetails.self) private var loginDetails: LoginDetails
     @State private var incomingServer: Server
     @State private var outgoingServer: Server
@@ -154,7 +154,12 @@ struct ManualServerSetup: View {
                             outgoingServer
                         ]
                     }
-                    accounts.set(account)
+                    
+                    do {
+                        try accountManager.set(account)
+                    } catch {
+                        self.error = error
+                    }
                 }) {
                     Text("account_oauth_sign_in_button")
                         .padding(5.5)
@@ -173,9 +178,13 @@ struct ManualServerSetup: View {
 }
 
 #Preview("Manual Server Account Setup") {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var store = LocalStore()
+    @Previewable @State var accountManager: AccountManager = AccountManager(store: store)
     @Previewable @State var loginDetails: LoginDetails = LoginDetails()
-    ManualServerSetup(loginDetails).environment(accounts).environment(loginDetails)
+    
+    ManualServerSetup(loginDetails)
+        .environment(accountManager)
+        .environment(loginDetails)
 }
 
 public extension Server {

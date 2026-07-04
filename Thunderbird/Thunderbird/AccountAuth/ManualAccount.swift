@@ -12,7 +12,7 @@ import SwiftUI
 import Account
 
 struct ManualAccount: View {
-    @Environment(Accounts.self) private var accounts: Accounts
+    @Environment(AccountManager.self) private var accountManager: AccountManager
     @Environment(\.dismiss) private var dismiss
     @State private var loginDetails: LoginDetails = LoginDetails()
     @State private var path = NavigationPath()
@@ -22,7 +22,7 @@ struct ManualAccount: View {
         NavigationStack(path: $path) {
             AccountInformation($path)
                 .environment(loginDetails)
-                .environment(accounts)
+                .environment(accountManager)
                 .toolbarRole(.editor)
                 .toolbar {
                     ToolbarItem(id: "navBar", placement: .cancellationAction) {
@@ -33,7 +33,7 @@ struct ManualAccount: View {
                             })
                     }
                 }
-                .onChange(of: accounts.allAccounts.count) {
+                .onChange(of: accountManager.allAccounts.count) {
                     dismiss()
                 }
                 .navigationBarBackButtonHidden()
@@ -42,18 +42,10 @@ struct ManualAccount: View {
                         EmailAccountTypeSelection($path).toolbarRole(.editor).environment(loginDetails)
                     }
                     if destination == "ManualAccountSetup" {
-                        if loginDetails.inProgressAccount == nil {
-                            ManualServerSetup(loginDetails)
-                                .toolbarRole(.editor)
-                                .environment(accounts)
-                                .environment(loginDetails)
-                        } else {
-                            ManualServerSetup(loginDetails)
-                                .toolbarRole(.editor)
-                                .environment(accounts)
-                                .environment(loginDetails)
-                        }
-
+                        ManualServerSetup(loginDetails)
+                            .toolbarRole(.editor)
+                            .environment(accountManager)
+                            .environment(loginDetails)
                     }
                 }
         }.accentColor(.gray)
@@ -62,10 +54,11 @@ struct ManualAccount: View {
 
 #Preview("Manual Account Setup") {
     @Previewable @State var getStarted: Bool = false
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var store = LocalStore()
+    @Previewable @State var accountManager = AccountManager(store: store)
 
     ManualAccount()
-        .environment(accounts)
+        .environment(accountManager)
         .sheet(isPresented: $getStarted) {
             EmptyView()
                 .presentationDragIndicator(.visible)

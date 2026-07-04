@@ -33,17 +33,17 @@ public struct LocalStore {
         try migrator.applyMigrations(db: dbQueue)
     }
     
-    public func loadSession() throws -> SessionState? {
+    public func loadPreferences() throws -> UserPreferences? {
         let session = try dbQueue.read { db in
-            try SessionState.find(db, id: "1")
+            try UserPreferences.find(db, id: "1")
         }
         
         return session
     }
     
-    public func saveSession(_ session: SessionState) throws {
+    public func savePreferences(_ preferences: UserPreferences) throws {
         try dbQueue.write { db in
-            try session.save(db)
+            try preferences.save(db)
         }
     }
     
@@ -81,7 +81,10 @@ extension LocalStore {
 
 // MARK: Mailbox DB methods
 extension LocalStore {
-    
+    public func loadEmails(for mailbox: String, cursor: UID?) -> [Email] {
+        // TODO: load emails from DB here
+        return []
+    }
 }
 
 private struct LocalStoreMigrator {

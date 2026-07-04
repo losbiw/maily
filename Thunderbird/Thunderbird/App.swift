@@ -6,18 +6,29 @@ import Account
 import SwiftUI
 
 @main
-struct App: SwiftUI.App {    
-    @State private var store: LocalStore = try LocalStore()
-    @State private var accounts: Accounts = Accounts()
+struct App: SwiftUI.App {
+    @State private var store: LocalStore
+    @State private var accountManager: AccountManager
+    @State private var session: SessionManager
     @State private var showAlert = false
     @State private var featureFlags: FeatureFlags = FeatureFlags(distribution: .current)
+    
+    init() {
+        let store = try! LocalStore()
+        let accountManager = try! AccountManager(store: store)
+        session = try! SessionManager(store: store, accountManager: accountManager)
+        
+        self.store = store
+        self.accountManager = accountManager
+    }
 
     // MARK: App
     var body: some Scene {
         WindowGroup {
             ZStack {
                 ContentView()
-                    .environment(accounts)
+                    .environment(accountManager)
+                    .environment(session)
                     .environment(featureFlags)
                 if showAlert {
                     FeatureNotImplementedView()

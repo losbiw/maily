@@ -6,44 +6,52 @@ import SwiftUI
 import Account
 
 struct ContentView: View {
-    @State private var isPresented: Bool = false
+    @State private var isSetupShown: Bool = false
     @State private var hasAuthorization: Bool = false
-    @Environment(Accounts.self) private var accounts: Accounts
+    
+    @Environment(SessionManager.self) private var session: SessionManager
+    @Environment(AccountManager.self) private var accountManager: AccountManager
 
     // MARK: View
     var body: some View {
         VStack {
             if hasAuthorization {
                 EmailListView()
-                    .environment(accounts)
+                    .environment(session)
             } else {
                 NavigationStack {
-                    WelcomeScreen($isPresented)
+                    WelcomeScreen($isSetupShown)
                 }
-                .sheet(isPresented: $isPresented) {
+                .sheet(isPresented: $isSetupShown) {
                     ManualAccount()
+                        .environment(accountManager)
                 }
                 .presentationDragIndicator(.visible)
             }
         }
-        .onChange(of: accounts.allAccounts, initial: true) {
-            guard !accounts.allAccounts.isEmpty else {
+        .onChange(of: session.selectedAccount, initial: true) {
+            let acc = session.selectedAccount
+            
+            guard acc != nil else {
                 hasAuthorization = false
                 return
             }
+            
             hasAuthorization =
-                accounts
-                .allAccounts[0].incomingServer?.authorization != nil
-                && accounts
-                    .allAccounts[0].outgoingServer?.authorization != nil
-            isPresented = false
+                acc?.incomingServer?.authorization != nil
+                && acc?.outgoingServer?.authorization != nil
+            
+            isSetupShown = false
         }
     }
 }
 
 #Preview("Content View") {
-    @Previewable @State var store: LocalStore = LocalStore()
-    @Previewable @State var accounts: Accounts = Accounts(store: store)
+    @Previewable @State var store = LocalStore()
+    @Previewable @State var accountManager = AccountManager(store: store)
+    @Previewable @State var session = SessionManager(store: store, accountManager: accountManager)
 
-    ContentView().environment(accounts)
+    ContentView()
+        .environment(session)
+        .environment(accountManager)
 }
