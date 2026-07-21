@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		15501F1C2F9666AB0041B309 /* Bolt in Frameworks */ = {isa = PBXBuildFile; productRef = 15501F1B2F9666AB0041B309 /* Bolt */; };
 		15501F1E2F9666AB0041B309 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 15501F1D2F9666AB0041B309 /* Core */; };
+		FEFA29FB2FF6AAF700C8210B /* InfomaniakRichHTMLEditor in Frameworks */ = {isa = PBXBuildFile; productRef = FEFA29FA2FF6AAF700C8210B /* InfomaniakRichHTMLEditor */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				15501F1C2F9666AB0041B309 /* Bolt in Frameworks */,
+				FEFA29FB2FF6AAF700C8210B /* InfomaniakRichHTMLEditor in Frameworks */,
 				15501F1E2F9666AB0041B309 /* Core in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,6 +132,7 @@
 			packageProductDependencies = (
 				15501F1B2F9666AB0041B309 /* Bolt */,
 				15501F1D2F9666AB0041B309 /* Core */,
+				FEFA29FA2FF6AAF700C8210B /* InfomaniakRichHTMLEditor */,
 			);
 			productName = Thunderbird;
 			productReference = 1521D8162D9C4D6200C4DFDF /* Thunderbird.app */;
@@ -257,6 +260,7 @@
 			packageReferences = (
 				1560FEE62DDF611F00F6295C /* XCLocalSwiftPackageReference "../Bolt" */,
 				15CB123B2F71854C002C0DA6 /* XCLocalSwiftPackageReference "../Core" */,
+				FEFA29E32FF59CD800C8210B /* XCRemoteSwiftPackageReference "swift-rich-html-editor" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1521D8172D9C4D6200C4DFDF /* Products */;
@@ -619,6 +623,17 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		FEFA29E32FF59CD800C8210B /* XCRemoteSwiftPackageReference "swift-rich-html-editor" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/thunderbird/swift-rich-html-editor";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		15501F1B2F9666AB0041B309 /* Bolt */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -627,6 +642,11 @@
 		15501F1D2F9666AB0041B309 /* Core */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Core;
+		};
+		FEFA29FA2FF6AAF700C8210B /* InfomaniakRichHTMLEditor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FEFA29E32FF59CD800C8210B /* XCRemoteSwiftPackageReference "swift-rich-html-editor" */;
+			productName = InfomaniakRichHTMLEditor;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

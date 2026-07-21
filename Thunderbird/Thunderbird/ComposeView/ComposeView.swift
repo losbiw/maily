@@ -1,9 +1,6 @@
-//
-//  ComposeView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 2/18/26.
-//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import SwiftUI
 
@@ -12,18 +9,16 @@ struct ComposeView: View {
     @State private var rawText = NSAttributedString(string: "")
 
     var body: some View {
-        VStack {
-            ComposeHeaderView()
+        EmailBodyView(editable: true)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
 
-        }.toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                }) {
-                    Image(systemName: "archivebox")
-                        .foregroundStyle(.foreground)
+                    }) {
+                        Image(systemName: "archivebox")
+                            .foregroundStyle(.foreground)
+                    }
                 }
             }
-        }
-
     }
 }

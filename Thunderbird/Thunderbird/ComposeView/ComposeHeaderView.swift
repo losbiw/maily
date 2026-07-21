@@ -1,9 +1,6 @@
-//
-//  ComposeHeaderView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 2/18/26.
-//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import SwiftUI
 import Account
@@ -22,7 +19,7 @@ struct ComposeHeaderView: View {
 
     var body: some View {
         VStack {
-            List {
+            Group {
                 HStack {
                     Picker("from_header", selection: $selectedSender) {
                         ForEach(accounts.allAccounts) { account in
@@ -30,34 +27,56 @@ struct ComposeHeaderView: View {
                         }
                     } currentValueLabel: {
                         Text(accounts.account(for: selectedSender)?.name ?? "")
-                    }.pickerStyle(.menu)
+                    }
+                    .pickerStyle(.menu)
+
                     Spacer()
-                    if !showReplyTo {
-                        Button("", systemImage: "chevron.down") {
-                            showReplyTo = true
-                        }.foregroundStyle(.black)
+
+                    VStack {
+                        if !showReplyTo {
+                            Spacer()
+                            Button("", systemImage: "chevron.down") {
+                                showReplyTo = true
+                            }
+                            .foregroundStyle(.black)
+                            Spacer()
+                        }
                     }
                 }
+
                 if showReplyTo {
                     MultiAddressBar("reply_to_header", $replyToRecipients)
                 }
+
                 HStack(alignment: .top) {
                     MultiAddressBar("to_header", $toRecipients)
                     if !showCCBCC {
-                        Button("", systemImage: "chevron.down") {
-                            showCCBCC = true
-                        }.foregroundStyle(.black)
+                        VStack {
+                            Spacer()
+                            Button("", systemImage: "chevron.down") {
+                                showCCBCC = true
+                            }
+                            .foregroundStyle(.black)
+                            Spacer()
+                        }
                     }
                 }
-                if showCCBCC {
-                    MultiAddressBar("cc_header", $ccRecipients)
-                    MultiAddressBar("bcc_header", $bccRecipients)
-                }
+            }
+            .padding(.bottom, 4)
 
-                TextField("subject_header", text: $subject)
-            }.frame(alignment: .leading)
+            if showCCBCC {
+                MultiAddressBar("cc_header", $ccRecipients)
+                MultiAddressBar("bcc_header", $bccRecipients)
+            }
+
+            Divider()
+
+            TextField("subject_header", text: $subject)
                 .font(.subheadline)
+                .padding()
+                .background(.gray, in: RoundedRectangle(cornerRadius: 24))
         }
+        .padding()
     }
 }
 
@@ -80,7 +99,7 @@ struct MultiAddressBar: View {
                 Text(headerText)
                     .fixedSize()
                 TextField("", text: $entryString)
-                    .textFieldStyle(.plain)
+                    .textFieldStyle(.automatic)
                     .autocorrectionDisabled()
                     .autocapitalization(.none)
                     .focusable()
@@ -97,7 +116,8 @@ struct MultiAddressBar: View {
                 }
             }
         }
-
+        .padding()
+        .background(.gray, in: RoundedRectangle(cornerRadius: 24))
     }
 }
 
