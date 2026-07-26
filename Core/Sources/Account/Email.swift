@@ -9,7 +9,7 @@ import JMAP
 import MIME
 
 /// Common `Email` model represents and losslessly converts to and from both ``IMAP.Message`` and ``JMAP.Email``
-public struct Email: CustomStringConvertible, Identifiable, Sendable {
+public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable, Hashable {
     public let from: [EmailAddressProtocol]
     public let sender: [EmailAddressProtocol]
     public let replyTo: [EmailAddressProtocol]
@@ -25,6 +25,9 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable {
     public let body: Body?
     public let blobID: String?
     public let uid: UID?
+    public let snippet: String?
+    // TODO: unify flags for IMAP + JMAP
+    public let flags: Set<Flag>
 
     public init(
         from: [EmailAddressProtocol] = [],
@@ -41,6 +44,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable {
         subject: String? = nil,
         body: Body? = nil,
         blobID: String? = nil,
+        flags: Set<Flag>,
         uid: UID? = nil,
         id: String? = nil
     ) {
@@ -58,6 +62,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable {
         self.subject = subject
         self.body = body
         self.blobID = blobID
+        self.flags = flags
         self.uid = uid
         self.id = id ?? UUID().uuidString(1)
     }
@@ -102,6 +107,7 @@ extension Email {
             inReplyTo: message.inReplyTo,
             subject: message.envelope.subject,
             body: message.body,
+            flags: message.flags,
             uid: message.uid,
             id: message.emailID ?? message.gmailID
         )
@@ -124,6 +130,9 @@ extension Email {
             subject: email.subject,
             body: try? Body(email),
             blobID: email.blobID,
+            // FIXME: replace the flags placeholder
+            flags: Set(),
+            uid: UID(rawValue: UInt32(1)),
             id: email.id
         )
     }

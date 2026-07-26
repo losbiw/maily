@@ -34,6 +34,10 @@ extension [FetchAttribute] {
         .threadID,
         .uid
     ]
+    
+    public static let snippet: Self = [
+        .bodySection(peek: true, .text, 0...1024)
+    ]
 
     // Filter unsupported attributes according to server capabilities
     func filtered(_ capabilities: Set<Capability>) -> Self {

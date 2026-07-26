@@ -81,9 +81,13 @@ extension LocalStore {
 
 // MARK: Mailbox DB methods
 extension LocalStore {
-    public func loadEmails(for mailbox: String, cursor: UID?) -> [Email] {
+    public func loadEmails(for mailbox: String, cursor: UID?) throws -> [Email] {
         // TODO: load emails from DB here
         return []
+    }
+    
+    public func cacheEmails(in mailbox: String, emails: [Email]) throws {
+        
     }
 }
 

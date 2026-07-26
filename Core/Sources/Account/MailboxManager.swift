@@ -8,11 +8,15 @@ import Foundation
 @Observable
 public final class MailboxManager {
     public let account: Account
+    private let store: LocalStore
     public private(set) var mailboxes: [Mailbox] = []
+    public private(set) var emails: [String: [Email]] = [:]
+    // TODO: probably throw from here instead of saving the error
     public var error: AccountError?
 
-    public init(account: Account) {
+    public init(account: Account, store: LocalStore) {
         self.account = account
+        self.store = store
     }
 
     public func mailbox(_ name: String) -> Mailbox? {
@@ -22,20 +26,50 @@ public final class MailboxManager {
     public func mailbox(for id: String) -> Mailbox? {
         mailboxes.first(where: { $0.id == id })
     }
-
-    public func emails(in mailbox: Mailbox) async -> [Email] {
+    
+    public func emailWithBody(for uid: UID, in mailbox: Mailbox) async -> Email? {
         do {
             switch account.emailProtocol {
             case .imap:
                 let client: IMAPClient = try await account.imapClient
                 try await client.select(mailbox: IMAP.Mailbox.Name(mailbox.name))
-                let messages: MessageSet = try await client.fetch()
-                return messages.keys.sorted().reversed().map { Email(messages[$0]!) }
+                let message: Message = try await client.fetch(uid: uid) // fetches the entire body by default
+                return Email(message)
             case .jmap:
-                let client: JMAPClient = try await account.jmapClient
-                let emails: [JMAP.Email] = try await client.emails(in: JMAP.Mailbox(name: mailbox.name, id: mailbox.id))
-                return emails.map { Email($0) }
+                return nil
             }
+        } catch {
+            self.error = AccountError(error)
+            return nil
+        }
+    }
+    
+    private func mergeEmails(_ cached: [Email], _ new: [Email]) -> [Email] {
+        return Array(Set(cached + new)).sorted().reversed()
+    }
+
+    public func emails(in mailbox: Mailbox, cursor: UID?) async {
+        do {
+            let cache = try store.loadEmails(for: mailbox.name, cursor: cursor)
+
+            let serverEmails: [Email] = try await {
+                switch self.account.emailProtocol {
+                case .imap:
+                    let client: IMAPClient = try await self.account.imapClient
+                    try await client.select(mailbox: IMAP.Mailbox.Name(mailbox.name))
+                    let messages: MessageSet = try await client.fetch()
+                    return messages.keys.sorted().reversed().map { Email(messages[$0]!) }
+                case .jmap:
+                    let client: JMAPClient = try await self.account.jmapClient
+                    let emails: [JMAP.Email] = try await client.emails(in: JMAP.Mailbox(name: mailbox.name, id: mailbox.id))
+                    return emails.map { Email($0) }
+                }
+            }()
+            
+            let mergedEmails = mergeEmails(cache, serverEmails)
+            try store.cacheEmails(in: mailbox.name, emails: mergedEmails)
+            
+            return mergedEmails
         } catch {
             self.error = AccountError(error)
             return []

@@ -12,48 +12,48 @@ import SwiftUI
 import Account
 
 struct EmailListView: View {
-    @Environment(Accounts.self) private var accounts: Accounts
-    // TODO: replace with actual emails
-    let tempEmails = TempEmail.sampleData
-    @State private var session: UserSession = UserSession(store: , accounts: Accounts.self)
-    @State private var mailbox: MailboxManager = MailboxManager()
-    // TODO: why is this even here?
-    @State var editMode: EditMode = .inactive
-    @State private var selections = Set<UUID>()
-    @State private var showDrawer = false
+    @Environment(SessionManager.self) private var session: SessionManager
+    
+    @State private var selections = Set<String>()
     @State private var path = NavigationPath()
-
-    func sortEmails() {
+    @State private var emails: [Email] = []
+    
+    // MARK: UI State
+    @State private var showDrawer = false
+    @State var editMode: EditMode = .inactive
+    @State var error: Error?
+        
+    func sortEmails(by strategy: SortStrategy) {
         //Not yet implemented
         AlertManager.shared.showAlert = true
         AlertManager.shared.alertTitle = "Sort Emails"
     }
 
     func selectAll() {
-        for tempEmail in tempEmails {
-            selections.insert(tempEmail.uuid)
+        for email in emails {
+            selections.insert(email.id)
         }
     }
 
     //TODO: replace with backend unread state call
     func markAllRead() {
-        for tempEmail in tempEmails {
-            tempEmail.unread = false
-            tempEmail.newEmail = false
+        for email in emails {
+            email.unread = false
+            email.newEmail = false
         }
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             ZStack(alignment: .bottomTrailing) {
-                if tempEmails.isEmpty {
+                if emails.isEmpty {
                     VStack {
                         Text("empty_inbox")
                             .padding(.bottom, 5)
                         Text("new_messages_will_appear")
                             .padding(.bottom, 10)
                         Button {
-                            //Do Nothing
+                            // TODO: trigger login flow
                         } label: {
                             Text("add_another_account")
                         }.buttonBorderShape(.capsule)
@@ -63,7 +63,7 @@ struct EmailListView: View {
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     VStack {
-                        List(tempEmails, id: \.uuid, selection: $selections) { email in
+                        List(emails, id: \.id, selection: $selections) { email in
                             NavigationLink {
                                 ReadEmailView(email)
                             } label: {
@@ -80,10 +80,24 @@ struct EmailListView: View {
                             .listRowSeparator(.hidden)
                             .navigationLinkIndicatorVisibility(.hidden)
                         }
+                        
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .onAppear {
+                                do {
+                                    let oldestEmail = emails.first!
+                                    let additionalEmails = try session.loadEmails(cursor: oldestEmail.uid)
+                                    
+                                    emails.append(contentsOf: additionalEmails)
+                                } catch {
+                                    self.error = error
+                                }
+                            }
                     }.environment(\.editMode, $editMode)
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
                 }
+                
                 Button {
                     path.append("compose")
                 } label: {
@@ -102,17 +116,21 @@ struct EmailListView: View {
                         ComposeView()
                     }
                 }
+                
                 DrawerView(showDrawer: $showDrawer)
+                    .environment(session)
             }
             .navigationTitle("inbox_header")
-
+            
             .navigationBarBackButtonHidden(editMode.isEditing)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        showDrawer = true
+                        withAnimation {
+                            showDrawer = true
+                        }
                     } label: {
-                        Label("Account", systemImage: "line.3.horizontal").labelStyle(.iconOnly)
+                        Label("account", systemImage: "line.3.horizontal")
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
@@ -131,17 +149,17 @@ struct EmailListView: View {
                         Button(
                             "date_sort_button",
                             action: {
-                                sortEmails()
+                                sortEmails(by: .date)
                             })
                         Button(
                             "read_status_sort_button",
                             action: {
-                                sortEmails()
+                                sortEmails(by: .status)
                             })
                         Button(
                             "has_attachments_sort_button",
                             action: {
-                                sortEmails()
+                                sortEmails(by: .hasAttachments)
                             })
                     } label: {
                         Label("sort_button", systemImage: "line.3.horizontal.decrease", )
@@ -165,7 +183,11 @@ struct EmailListView: View {
                         Button(
                             "account_sign_out_button",
                             action: {
-                                accounts.deleteAccounts()
+                                do {
+                                    try session.deleteCurrentAccount()
+                                } catch {
+                                    self.error = error
+                                }
                             })
                     } label: {
                         Label("options_button", systemImage: "ellipsis")
@@ -173,13 +195,32 @@ struct EmailListView: View {
                 }
             }
         }
+        .onChange(of: session.selectedMailbox, initial: true) {
+            do {
+                emails = try session.loadEmails()
+            } catch {
+                self.error = EmailError.failedToLoad(error)
+            }
+        }
     }
+}
+
+public enum EmailError: Error {
+    case failedToLoad(Error)
+}
+
+public enum SortStrategy {
+    case date
+    case status
+    case hasAttachments
 }
 
 #Preview("Email List") {
     @Previewable @State var flags: FeatureFlags = FeatureFlags(distribution: .current)
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var store = LocalStore()
+    @Previewable @State var accountManager = AccountManager(store: store)
+    
     EmailListView()
         .environment(flags)
-        .environment(accounts)
+        .environment(accountManager)
 }

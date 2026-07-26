@@ -11,23 +11,33 @@
 import SwiftUI
 import WebKit
 import EmailAddress
+import Account
 
 struct ReadEmailView: View {
-    init(_ email: TempEmail) {
-        self.email = email
+    @Environment(MailboxManager.self) private var mailboxManager: MailboxManager
+    
+    init(_ email: Email) {
+        guard self.email.body == nil else {
+            self.email = email
+        }
+        
+        let emailWithBody = mailboxManager.getBody(for: self.email.uid)
+        self.email = emailWithBody
     }
-    private var email: TempEmail
+    
+    private var email: Email
 
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
-                    Text(email.headerText)
+                    Text(email.subject ?? "no_subject")
                         .font(.title3)
                     Spacer()
-                    if email.attachments != nil {
-                        Image(systemName: "paperclip").font(.caption)
-                    }
+                    // TODO: check for attachments here
+//                    if email.attachments != nil {
+//                        Image(systemName: "paperclip").font(.caption)
+//                    }
                 }
 
                 ScrollView {
@@ -204,19 +214,20 @@ struct WebView: UIViewRepresentable {
 }
 
 struct SenderView: View {
-    init(email: TempEmail) {
+    init(email: Email) {
         from = email.from
         sender = email.sender
+        replyTo = email.replyTo
         recipients = email.cc
         toText = email.to
-        date = email.dateSent
-        replyTo = email.reply
+        date = email.sent!
     }
-    private var from: [EmailAddress]
-    private var sender: [EmailAddress]
-    private var replyTo: [EmailAddress]
-    private var recipients: [EmailAddress]
-    private var toText: [EmailAddress]
+
+    private var from: [EmailAddressProtocol]
+    private var sender: [EmailAddressProtocol]
+    private var replyTo: [EmailAddressProtocol]
+    private var recipients: [EmailAddressProtocol]
+    private var toText: [EmailAddressProtocol]
     private var date: Date
     @State private var showSenderRecipientInfo = false
     @State private var showEmailOptions = false
@@ -224,11 +235,13 @@ struct SenderView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
+                let fromDisplayValue = from[0].addresses[0]
+                
                 HStack {
-                    Text(from[0].value).font(.title3)
+                    Text(fromDisplayValue.label ?? fromDisplayValue.value).font(.title3)
                 }
                 HStack {
-                    Text("To: \(toText[0].label ?? toText[0].value)")
+                    Text("To: \(toText[0].addresses[0].label ?? toText[0].addresses[0].value)")
                     if recipients.count > 0 {
                         Text("+\(recipients.count)")
                     }
@@ -305,7 +318,7 @@ struct SenderView: View {
                 List {
                     Section(header: Text("from_header")) {
                         ForEach(from) { person in
-                            ContactCellView(contact: person)
+                            ContactCellView(contact: person.addresses[0])
                         }
                     }.listRowSeparator(.hidden)
 

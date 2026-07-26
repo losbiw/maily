@@ -12,7 +12,7 @@ import Account
 import SwiftUI
 
 struct DrawerView: View {
-    @Environment(Accounts.self) private var accounts: Accounts
+    @Environment(SessionManager.self) private var session: SessionManager
     @Binding var showDrawer: Bool
 
     // MARK: View
@@ -58,14 +58,19 @@ struct DrawerView: View {
 }
 
 #Preview("Account Drawer") {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var store = LocalStore()
+    @Previewable @State var accountManager = AccountManager(store: store)
+    @Previewable @State var session = SessionManager(store: store, accountManager: accountManager)
     @Previewable @State var showDrawer: Bool = true
-    DrawerView(showDrawer: $showDrawer).environment(accounts)
+    
+    DrawerView(showDrawer: $showDrawer)
+        .environment(session)
 }
 
 struct DrawerContent: View {
-    @Environment(Accounts.self) private var accounts: Accounts
+    @Environment(SessionManager.self) private var session: SessionManager
     @Binding var showDrawer: Bool
+    
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(accounts.allAccounts) { account in

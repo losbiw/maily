@@ -50,17 +50,14 @@ public final class SessionManager {
         // TODO: delete messages from the local DB here
     }
     
-    public func loadEmails(cursor: UID? = nil) throws -> [Email] {
+    public var emails(cursor: UID? = nil) async throws -> [Email] {
         guard selectedMailbox != nil else {
             throw SessionError.noMailboxExists
         }
-                
-        // FIXME: delegate to MailboxManager and return here:
-        // retrieve from local store here + retrieve from IMAP + merge
+
+        let emails = await mailboxManager?.emails(in: selectedMailbox!, cursor: cursor)
         
-        let cachedEmails = store.loadEmails(for: selectedMailbox!.name, cursor: cursor)
-        
-        return []
+        return emails ?? []
     }
 
     

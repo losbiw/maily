@@ -9,15 +9,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import SwiftUI
-import EmailAddress
+import Account
 
 struct EmailCellView: View {
-    let email: TempEmail
     @Environment(FeatureFlags.self) private var flags: FeatureFlags
-    let senderText: String
-    let headerText: String
-    let bodyText: String
-    let dateSent: Date
+    let sender: String
+    let subject: String
+    let bodyPreview: String
+    let dateSent: Date?
 
     // For alignment, bool check likely not final
     let unread: Bool
@@ -26,17 +25,19 @@ struct EmailCellView: View {
     let hasAttachment: Bool
     let isThread: Bool
 
-    init(email: TempEmail) {
-        self.senderText = email.from[0].label ?? email.from[0].value
-        self.headerText = email.headerText
-        self.bodyText = email.bodyText
-        self.dateSent = email.dateSent
+    init(email: Email) {
+        self.sender = email.from[0].addresses.label ?? email.from[0].addresses.value
+        self.subject = email.subject ?? ""
+        // FIXME: fetch the preview independently somewhere or make a separate field for it
+        self.bodyPreview = "ararara"
+        self.dateSent = email.sent
+        self.isThread = email.threadID.count > 0
+        
+        // TODO: check flags
         self.unread = email.unread
         self.newEmail = email.newEmail
         self.hasAttachment = email.attachments != nil
-        self.isThread = email.isThread
         self.pinned = email.pinned
-        self.email = email
     }
 
     var body: some View {
@@ -47,21 +48,23 @@ struct EmailCellView: View {
                         .font(.system(size: 8))
                 }
 
-                Text(senderText)
+                Text(sender)
                     .lineLimit(1)
                     .font(.headline)
                     .fontWeight(unread ? .semibold : .regular)
 
                 Spacer()
 
-                Text(
-                    SmartDateFormatter()
-                        .dateFormatter(date: dateSent, isSmartDate: !flags.flagForKey(key: Flag.fullDate.rawValue))
-                )
-                .lineLimit(1)
-                .font(.footnote)
-                .truncationMode(.tail)
-                .foregroundColor(.muted)
+                if dateSent != nil {
+                    Text(
+                        SmartDateFormatter()
+                            .dateFormatter(date: dateSent!, isSmartDate: !flags.flagForKey(key: Flag.fullDate.rawValue))
+                    )
+                    .lineLimit(1)
+                    .font(.footnote)
+                    .truncationMode(.tail)
+                    .foregroundColor(.muted)
+                }
 
             }
             .padding(.leading, pinned ? 0 : 20)
@@ -77,7 +80,7 @@ struct EmailCellView: View {
                         .font(.system(size: 8))
                 }
 
-                Text(headerText)
+                Text(subject)
                     .lineLimit(1)
                     .font(.subheadline)
                     .fontWeight(unread ? .semibold : .regular)
@@ -103,7 +106,7 @@ struct EmailCellView: View {
             }
             .padding(.leading, newEmail || unread ? 0 : 20)
 
-            Text(bodyText)
+            Text(bodyPreview)
                 .lineLimit(1)
                 .foregroundColor(.muted)
                 .font(.footnote)
