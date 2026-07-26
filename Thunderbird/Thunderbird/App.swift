@@ -10,6 +10,8 @@ struct App: SwiftUI.App {
     @State private var store: LocalStore
     @State private var accountManager: AccountManager
     @State private var session: SessionManager
+    // TODO: move the mailboxManagers to session manager
+    @State private var mailboxManagers: UnifiedMailboxManager = UnifiedMailboxManager()
     @State private var showAlert = false
     @State private var featureFlags: FeatureFlags = FeatureFlags(distribution: .current)
     

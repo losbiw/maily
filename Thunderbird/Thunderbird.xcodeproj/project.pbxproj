@@ -31,9 +31,12 @@
 		142ECC532ECE4D1C00518776 /* Exceptions for "Thunderbird" folder in "ThunderbirdTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Assets.xcassets,
 				FeatureFlags/Distribution.swift,
 				FeatureFlags/FeatureFlags.swift,
+				Util/AvatarView.swift,
 				Util/SmartDateFormatter.swift,
+				Util/UtilFunctions.swift,
 			);
 			target = 1521D8232D9C4D6300C4DFDF /* ThunderbirdTests */;
 		};

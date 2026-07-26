@@ -100,3 +100,11 @@
 "select_all_button" = "Select All";
 "done_button" = "Done";
 
+
+//Predictable folder names
+"inbox_localized" = "Inbox";
+"sent_localized" = "Sent";
+"archive_localized" = "Archive";
+"spam_localized" = "Spam";
+"draft_localized" = "Draft";
+"trash_localized" = "Trash";

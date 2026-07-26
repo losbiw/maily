@@ -27,6 +27,7 @@ public struct Account: Codable, Equatable, Hashable, Identifiable, FetchableReco
     public var deletePolicy: DeletePolicy
     public var identities: [EmailAddress]
     public var servers: [Server]
+    public var avatarColor: String
 
     public var incomingServer: Server? { server(.jmap) ?? server(.imap) ?? nil }
     public var outgoingServer: Server? { server(.jmap) ?? server(.smtp) ?? nil }
@@ -61,13 +62,15 @@ public struct Account: Codable, Equatable, Hashable, Identifiable, FetchableReco
         deletePolicy: DeletePolicy = .never,
         identities: [EmailAddress] = [],
         servers: [Server] = [],
-        id: UUID = UUID()
+        id: UUID = UUID(),
+        avatar: String = "user-blue"
     ) {
         self.name = name
         self.deletePolicy = deletePolicy
         self.identities = identities
         self.servers = servers
         self.id = id
+        self.avatarColor = avatar
     }
 
     // MARK: Identifiable
