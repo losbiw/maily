@@ -18,6 +18,8 @@ extension [FetchAttribute] {
     public static let header: Self =
         [
             .bodySection(peek: true, .header, nil),
+            // body preview
+            .bodySection(peek: true, .text, 0...1024),
             .bodyStructure(extensions: true)
         ] + standard
 
@@ -33,10 +35,6 @@ extension [FetchAttribute] {
         .preview(lazy: true),
         .threadID,
         .uid
-    ]
-    
-    public static let snippet: Self = [
-        .bodySection(peek: true, .text, 0...1024)
     ]
 
     // Filter unsupported attributes according to server capabilities

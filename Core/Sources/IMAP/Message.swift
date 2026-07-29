@@ -17,6 +17,7 @@ public struct Message: Sendable {
     public fileprivate(set) var gmailMessageID: UInt64?
     public fileprivate(set) var gmailThreadID: UInt64?
     public fileprivate(set) var internalDate: Date?
+    public fileprivate(set) var snippet: String?
     public fileprivate(set) var threadID: String?
     public fileprivate(set) var uid: UID?
 
@@ -29,6 +30,7 @@ public struct Message: Sendable {
         gmailMessageID: UInt64? = nil,
         gmailThreadID: UInt64? = nil,
         internalDate: Date? = nil,
+        snippet: String? = nil,
         threadID: String? = nil,
         uid: UID? = nil
     ) {
@@ -40,6 +42,7 @@ public struct Message: Sendable {
         self.gmailMessageID = gmailMessageID
         self.gmailThreadID = gmailThreadID
         self.internalDate = internalDate
+        self.snippet = snippet
         self.threadID = threadID
         self.uid = uid
     }
@@ -56,6 +59,7 @@ extension Message {
         case gmailMessageID(UInt64)
         case gmailThreadID(UInt64)
         case internalDate(Date)
+        case snippet(String)
         case threadID(String)
         case uid(UID)
 
@@ -110,6 +114,7 @@ extension Message {
             case .gmailLabels(let labels): "\(id): \(labels)"
             case .gmailMessageID(let id), .gmailThreadID(let id): "\(self.id): \(id)"
             case .internalDate(let date): "\(id): \(date)"
+            case .snippet(let snippet): "\(id): \(snippet)"
             case .uid(let uid): "\(id): \(uid)"
             }
         }
@@ -131,6 +136,7 @@ extension Message {
             case .gmailMessageID: "gmailMessageID"
             case .gmailThreadID: "gmailThreadID"
             case .internalDate: "internalDate"
+            case .snippet: "snippet"
             case .threadID: "threadID"
             case .uid: "uid"
             }
@@ -141,8 +147,12 @@ extension Message {
         var message: Self = self
         for component in components {
             switch component {
-            case .bodyPart(_, let data):
-                message.body = try? Body(data)
+            case .bodyPart(let section, let data):
+                if section == .text {
+                    message.snippet = String(data: data, encoding: .utf8)
+                } else {
+                    message.body = try? Body(data)
+                }
             case .bodyStructure:
                 break  // Only decode complete message body
             case .emailID(let emailID):
@@ -159,6 +169,8 @@ extension Message {
                 message.gmailThreadID = gmailThreadID
             case .internalDate(let internalDate):
                 message.internalDate = internalDate
+            case .snippet(let snippet):
+                message.snippet = snippet
             case .threadID(let threadID):
                 message.threadID = threadID
             case .uid(let uid):

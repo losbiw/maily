@@ -46,6 +46,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
         blobID: String? = nil,
         flags: Set<Flag>,
         uid: UID? = nil,
+        snippet: String? = nil,
         id: String? = nil
     ) {
         self.from = from
@@ -64,6 +65,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
         self.blobID = blobID
         self.flags = flags
         self.uid = uid
+        self.snippet = snippet
         self.id = id ?? UUID().uuidString(1)
     }
 
@@ -109,6 +111,7 @@ extension Email {
             body: message.body,
             flags: message.flags,
             uid: message.uid,
+            snippet: message.snippet,
             id: message.emailID ?? message.gmailID
         )
     }
@@ -133,6 +136,7 @@ extension Email {
             // FIXME: replace the flags placeholder
             flags: Set(),
             uid: UID(rawValue: UInt32(1)),
+            snippet: email.preview,
             id: email.id
         )
     }
