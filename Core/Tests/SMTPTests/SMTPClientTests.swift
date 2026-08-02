@@ -22,9 +22,10 @@ private extension Email {
                 address  // Send to self
             ],
             subject: "Example email subject",
-            body: try! Body(parts: [
-                Part(data: "For a brief period of time, email body contents were made of plain, ASCII text only :)".data(using: .ascii)!, contentType: .text(.plain, .ascii))
-            ]),
+            body: try! Body(
+                part:
+                    Part(data: "For a brief period of time, email body contents were made of plain, ASCII text only :)".data(using: .ascii)!, contentType: .text(.plain, .ascii))
+            ),
             id: UUID(uuidString: "A51D5B17-CA61-4FF1-A4A8-C717289B8F9E")!
         )
     }

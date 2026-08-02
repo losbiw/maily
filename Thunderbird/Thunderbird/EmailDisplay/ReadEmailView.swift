@@ -43,7 +43,9 @@ struct ReadEmailView: View {
                 ScrollView {
                     VStack(alignment: .leading) {
                         SenderView(email: email)
-                        WebView(htmlString: email.bodyText).scaledToFill()
+
+                        EmailBodyView(html: email.bodyText, editable: false)
+
                         if email.attachments != nil {
                             AttachmentBlockView(email.attachments)
                         }

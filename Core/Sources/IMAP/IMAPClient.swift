@@ -351,7 +351,7 @@ private extension ClientBootstrap {
         Self(group: group).channelInitializer { channel in
             try! channel.pipeline.syncOperations.addHandlers(
                 [
-                    LoggingHandler(logger),
+                    // LoggingHandler(logger), // Enable byte-level logging
                     TLSClientHandler(serverHostname: server.hostname),
                     IMAPClientHandler(parserOptions: .max)
                 ]

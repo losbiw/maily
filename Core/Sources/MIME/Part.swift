@@ -5,6 +5,9 @@
 import Foundation
 
 /// MIME part described in [RFC 2045](https://www.rfc-editor.org/rfc/rfc2045#section-2.5)
+///
+/// `Part` can contain data for a single piece of text or binary, or they can themselves be multipart, containing one or more subparts.
+/// `Part` encodes and decodes complete plain text or MIME message part using `RawRepresentable` conformance.
 public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
 
     /// Instruct mail client to display decoded body part inline, in message, or link as an attachment. Optionally include file name and other metadata for source file.
@@ -15,15 +18,15 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
     /// The actual part content, encoded as an ASCII string using the transfer encoding specified in the part header; typically base64 or quoted-printable
     public let data: Data
 
-    public var headers: [String: String] {
-        var headers: [String: String] = [:]
+    public var headers: [Header] {
+        var headers: [Header] = []
         if let contentDisposition {
-            headers["Content-Disposition"] = contentDisposition.description
+            headers.append(try! Header(.contentDisposition, "\(contentDisposition)"))
         }
         if let contentTransferEncoding {
-            headers["Content-Transfer-Encoding"] = contentTransferEncoding.description
+            headers.append(try! Header(.contentTransferEncoding, "\(contentTransferEncoding)"))
         }
-        headers["Content-Type"] = contentType.description
+        headers.append(try! Header(.contentType, "\(contentType)"))
         return headers
     }
 
@@ -87,7 +90,9 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
                 continue
             }
         }
-        guard let data: Data = components.dropFirst(index).joined(separator: "\n").trimmed().data(using: .ascii), let contentType else {
+        guard let data: Data = components.dropFirst(index).joined(separator: "\n").trimmed().data(using: .ascii),
+            let contentType
+        else {
             throw MIMEError.dataNotDecoded(description.data(using: .ascii) ?? Data(), encoding: .ascii)
         }
         self.init(
@@ -124,12 +129,13 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
     // MARK: RawRepresentable
     public var rawValue: Data {
         var data: Data = Data()
-        for key in headers.keys.sorted() {
-            data.append("\(key): \(headers[key]!)\(crlf)".data(using: .ascii)!)
+        for header in headers {
+            data.append("\(header)".data(using: .ascii)!)
+            data.append(.crlf)
         }
-        data.append(crlf.data(using: .ascii)!)
-        data.append(self.data + crlf.data(using: .ascii)!)
-        data.append(crlf.data(using: .ascii)!)
+        data.append(.crlf)
+        data.append(self.data)
+        data.append(.crlf)
         return data
     }
 
@@ -144,13 +150,18 @@ extension [Part] {
             throw MIMEError.dataNotFound
         }
         var data: Data = Data()
-        data.append(crlf.data(using: .ascii)!)
+        data.append(.crlf)
         for part in self {
-            data.append("--\(boundary)\(crlf)".data(using: .ascii)!)
+            data.append("--\(boundary)".data(using: .ascii)!)
+            data.append(.crlf)
             data.append(part.rawValue)
-            data.append(crlf.data(using: .ascii)!)
         }
-        data.append("--\(boundary)--\(crlf)".data(using: .ascii)!)
+        data.append("--\(boundary)--".data(using: .ascii)!)
+        data.append(.crlf)
         return data
     }
+}
+
+extension Data {
+    static let crlf: Self = String.crlf.data(using: .ascii)!
 }

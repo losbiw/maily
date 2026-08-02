@@ -10,33 +10,34 @@ struct PartTests {
     @Test func headers() {
         #expect(
             Part.html.headers == [
-                "Content-Disposition": "inline",
-                "Content-Transfer-Encoding": "quoted-printable",
-                "Content-Type": "text/html; charset=\"UTF-8\""
+                try! Header(.contentDisposition, "inline"),
+                try! Header(.contentTransferEncoding, "quoted-printable"),
+                try! Header(.contentType, "text/html; charset=\"UTF-8\"")
+
             ])
         #expect(
             Part.jpeg.headers == [
-                "Content-Disposition": "inline; filename=\"mime-part.jpg\"; modification-date=\"Mon, 31 Oct 1977 15:14:00 +0000\"",
-                "Content-Transfer-Encoding": "base64",
-                "Content-Type": "image/jpeg"
+                try! Header(.contentDisposition, "inline; filename=\"mime-part.jpg\"; modification-date=\"Mon, 31 Oct 1977 15:14:00 +0000\""),
+                try! Header(.contentTransferEncoding, "base64"),
+                try! Header(.contentType, "image/jpeg")
             ])
         #expect(
             Part.png.headers == [
-                "Content-Disposition": "attachment; filename=\"mime-part.png\"",
-                "Content-Transfer-Encoding": "base64",
-                "Content-Type": "image/png"
+                try! Header(.contentDisposition, "attachment; filename=\"mime-part.png\""),
+                try! Header(.contentTransferEncoding, "base64"),
+                try! Header(.contentType, "image/png")
             ])
         #expect(
             Part.text.headers == [
-                "Content-Disposition": "inline",
-                "Content-Transfer-Encoding": "7bit",
-                "Content-Type": "text/plain; charset=\"US-ASCII\""
+                try! Header(.contentDisposition, "inline"),
+                try! Header(.contentTransferEncoding, "7bit"),
+                try! Header(.contentType, "text/plain; charset=\"US-ASCII\"")
             ])
         #expect(
             Part.zip.headers == [
-                "Content-Disposition": "attachment; filename=\"mime-part.zip\"; creation-date=\"Thu, 01 Jan 1970 00:00:00 +0000\"; modification-date=\"Mon, 31 Oct 1977 15:14:00 +0000\"",
-                "Content-Transfer-Encoding": "base64",
-                "Content-Type": "application/zip"
+                try! Header(.contentDisposition, "attachment; filename=\"mime-part.zip\"; creation-date=\"Thu, 01 Jan 1970 00:00:00 +0000\"; modification-date=\"Mon, 31 Oct 1977 15:14:00 +0000\""),
+                try! Header(.contentTransferEncoding, "base64"),
+                try! Header(.contentType, "application/zip")
             ])
     }
 

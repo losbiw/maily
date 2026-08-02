@@ -5,56 +5,35 @@
 import Foundation
 
 /// Multipart body element described in [RFC 2045](https://www.rfc-editor.org/rfc/rfc2045#section-2.6)
+///
+/// `Body` contains a single ``Part`` that is either multipart or text ``ContentType``.
+/// `Body` encodes and decodes complete plain text or MIME message bodies using `RawRepresentable` conformance.
 public struct Body: CustomStringConvertible, RawRepresentable, Sendable {
-    public let contentTransferEncoding: ContentTransferEncoding?
-    public let contentType: ContentType
-    public let parts: [Part]
+    public let part: Part
 
-    public var headers: [String: String] {
-        var headers: [String: String] = [:]
+    public var headers: [Header] {
+        var headers: [Header] = part.headers.filter { $0.name != .contentDisposition }
         if contentType.isMultipart {
-            headers["MIME-Version"] = "1.0"
+            headers.append(.mimeVersion)
         }
-        if let contentTransferEncoding {
-            headers["Content-Transfer-Encoding"] = contentTransferEncoding.description
-        }
-        headers["Content-Type"] = contentType.description
         return headers
     }
 
-    public init(parts: [Part], contentType: ContentType = .multipart(.mixed), encoding: ContentTransferEncoding? = nil) throws {
-        guard !parts.isEmpty else {
-            throw MIMEError.dataNotFound
+    public var contentTransferEncoding: ContentTransferEncoding? { part.contentTransferEncoding }
+    public var contentType: ContentType { part.contentType }
+
+    public init(part: Part) throws {
+        switch part.contentType {
+        case .multipart, .text:
+            self.part = part
+        default:
+            throw MIMEError.contentTypeNotPossible(part.contentType)
         }
-        if parts.count == 1 {
-            switch parts[0].contentType {
-            case .text:
-                contentTransferEncoding = parts[0].contentTransferEncoding
-                self.contentType = contentType
-            default:
-                throw MIMEError.contentTypeNotPossible(contentType)
-            }
-        } else if contentType.isMultipart {
-            contentTransferEncoding = encoding
-            self.contentType = contentType
-        } else {
-            throw MIMEError.contentTypeNotPossible(contentType)
-        }
-        self.parts = parts
     }
 
     /// Read headers and decode body from raw ASCII blob.
     public init(_ description: String) throws {
-        let part: Part = try Part(description)
-        switch part.contentType {
-        case .multipart:
-            let parts: [Part] = try part.parts
-            try self.init(parts: parts, contentType: part.contentType, encoding: part.contentTransferEncoding)
-        case .text(let subtype, let charset):
-            try self.init(parts: [part], contentType: .text(subtype, charset))
-        default:
-            throw MIMEError.contentTypeNotPossible(part.contentType)
-        }
+        try self.init(part: try Part(description))
     }
 
     /// Read headers and decode body from raw ASCII data.
@@ -71,19 +50,13 @@ public struct Body: CustomStringConvertible, RawRepresentable, Sendable {
     // MARK: RawRepresentable
     public var rawValue: Data {
         var data: Data = Data()
-        for key in headers.keys {
-            data.append("\(key): \(headers[key]!)\(crlf)".data(using: .ascii)!)
+        for header in headers {
+            data.append("\(header)".data(using: .ascii)!)
+            data.append(.crlf)
         }
-        switch contentType {
-        case .multipart(_, let boundary):
-            data.append(try! parts.data(using: boundary))
-        case .text:
-            data.append(crlf.data(using: .ascii)!)
-            data.append(parts[0].data)
-            data.append(crlf.data(using: .ascii)!)
-        default:
-            fatalError(MIMEError.contentTypeNotPossible(contentType).description)
-        }
+        data.append(.crlf)
+        data.append(part.data)
+        data.append(.crlf)
         return data
     }
 
@@ -93,14 +66,6 @@ public struct Body: CustomStringConvertible, RawRepresentable, Sendable {
 }
 
 extension Body {
-    public static var empty: Self {
-        try! Self(
-            parts: [
-                try! Part(data: "".data(using: .ascii)!, contentType: .text(.plain, .ascii))
-            ], contentType: .text(.plain, .ascii))
-    }
-
-    public var isEmpty: Bool {
-        parts.count == 1 && (String(data: parts[0].data, encoding: .ascii) ?? "").isEmpty
-    }
+    public static var empty: Self { try! Self(part: try! Part(data: "".data(using: .ascii)!, contentType: .text(.plain, .ascii))) }
+    public var isEmpty: Bool { (String(data: part.data, encoding: .ascii) ?? "").isEmpty }
 }
