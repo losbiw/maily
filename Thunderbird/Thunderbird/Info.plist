@@ -11,7 +11,7 @@
 			<string>net.thunderbird.ios</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>net.thunderbird.android.debug</string>
+				<string>net.thunderbird.ios</string>
 			</array>
 		</dict>
 	</array>

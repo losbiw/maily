@@ -1,17 +1,15 @@
-//
-//  AccountFolderDisclosureView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 5/8/26.
-//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
+import SwiftUI
 
 struct AccountFolderDisclosureView: View {
     @Environment(MailboxManager.self) private var mailboxManager: MailboxManager
-    @State var isExpanded: Bool = false
-    @State var unreadCount: Int = 0
+    @State private var isExpanded: Bool = false
+    @State private var unreadCount: Int = 0
+
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             ForEach(mailboxManager.mailboxes) { mailbox in
@@ -35,7 +33,6 @@ struct AccountFolderDisclosureView: View {
                             .font(.caption2)
                             .truncationMode(.middle)
                     }
-
                 }.padding(.horizontal)
                     .foregroundStyle(.black)
                 Spacer()
@@ -58,5 +55,7 @@ struct AccountFolderDisclosureView: View {
 
 #Preview {
     @Previewable @State var mailboxes: MailboxManager = MailboxManager(account: Account("temp@email.com"))
-    AccountFolderDisclosureView().environment(mailboxes)
+
+    AccountFolderDisclosureView()
+        .environment(mailboxes)
 }

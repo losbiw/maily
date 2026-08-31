@@ -9,8 +9,7 @@ struct WelcomeScreen: View {
         _isPresented = isPresented
     }
 
-    @Environment(\.openURL) private var openURL
-    @Environment(FeatureFlags.self) private var featureFlags: FeatureFlags
+    @Environment(\.openURL) private var openURL: OpenURLAction
     @Binding private var isPresented: Bool
 
     // MARK: View

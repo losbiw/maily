@@ -13,6 +13,7 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
     /// Instruct mail client to display decoded body part inline, in message, or link as an attachment. Optionally include file name and other metadata for source file.
     public let contentDisposition: ContentDisposition?
     public let contentTransferEncoding: ContentTransferEncoding?
+    public let contentID: ContentID?
     public let contentType: ContentType
 
     /// The actual part content, encoded as an ASCII string using the transfer encoding specified in the part header; typically base64 or quoted-printable
@@ -76,6 +77,7 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
         var contentDisposition: ContentDisposition?
         var contentTransferEncoding: ContentTransferEncoding?
         var contentType: ContentType?
+        var contentID: ContentID?
         for component in components[0..<index] {
             let header: [String] = component.components(separatedBy: ": ").map { $0.trimmed() }
             guard header.count == 2 else { continue }
@@ -86,6 +88,8 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
                 contentTransferEncoding = ContentTransferEncoding(rawValue: header[1])
             case "content-type":
                 contentType = ContentType(rawValue: header[1])
+            case "content-id":
+                contentID = ContentID(header[1])
             default:
                 continue
             }
@@ -99,6 +103,7 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
             data: data,
             contentDisposition: contentDisposition,
             contentTransferEncoding: contentTransferEncoding,
+            contentID: contentID,
             contentType: contentType
         )
     }
@@ -115,10 +120,12 @@ public struct Part: CustomStringConvertible, RawRepresentable, Sendable {
         data: Data,
         contentDisposition: ContentDisposition? = nil,
         contentTransferEncoding: ContentTransferEncoding? = nil,
+        contentID: ContentID? = nil,
         contentType: ContentType
     ) {
         self.contentDisposition = contentDisposition
         self.contentTransferEncoding = contentTransferEncoding
+        self.contentID = contentID
         self.contentType = contentType
         self.data = data
     }

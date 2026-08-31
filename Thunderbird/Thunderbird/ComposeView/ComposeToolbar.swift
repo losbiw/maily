@@ -2,32 +2,44 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import InfomaniakRichHTMLEditor
+import SwiftUI
 
 struct ComposeToolbar: View {
-    @ObservedObject var textAttributes: TextAttributes
-    @State private var isShowingLinkAlert: Bool = false
+    init(
+        textAttributes: TextAttributes,
+        isShowingLinkAlert: Bool = false,
+        linkText: String = "",
+        linkUrl: String = "",
+        keyboardShown: Binding<Bool>,
+        selection: Binding<String>
+    ) {
+        self.textAttributes = textAttributes
+        self.isShowingLinkAlert = isShowingLinkAlert
+        self.linkText = linkText
+        self.linkUrl = linkUrl
+        _keyboardShown = keyboardShown
+        _selection = selection
+    }
+
+    @State private var textAttributes: TextAttributes
+    @State private var isShowingLinkAlert: Bool
     @State private var linkText: String = ""
-    @State private var linkUrl: String = "https://www.google.com"
-    @Binding var keyboardShown: Bool
-    @Binding var selection: String
+    @State private var linkUrl: String = ""
+    @Binding private var keyboardShown: Bool
+    @Binding private var selection: String
 
     var body: some View {
         // Inline bindings allow us to leave the properties as private (set)
         // within `TextAttributes`, and still respond to events.
         let foregroundColor = Binding<Color>(
             get: { textAttributes.foregroundColor ?? .black },
-            set: { newValue in
-                textAttributes.setForegroundColor(UIColor(newValue))
-            }
+            set: { textAttributes.setForegroundColor(PlatformColor($0)) }
         )
 
         let backgroundColor = Binding<Color>(
             get: { textAttributes.backgroundColor ?? .white },
-            set: { newValue in
-                textAttributes.setBackgroundColor(UIColor(newValue))
-            }
+            set: { textAttributes.setBackgroundColor(PlatformColor($0)) }
         )
 
         ScrollView(.horizontal) {
@@ -157,7 +169,7 @@ struct ComposeToolbar: View {
         .frame(height: 44)
     }
 
-    func clearLinkInfo() {
+    private func clearLinkInfo() {
         linkText = ""
         linkUrl = ""
     }
@@ -180,8 +192,9 @@ struct EditorToolbarButton: View {
 }
 
 #Preview {
-    @Previewable @StateObject var textAttributes = TextAttributes()
+    @Previewable @State var textAttributes = TextAttributes()
     @Previewable @State var keyboardShown = false
     @Previewable @State var selection = ""
+
     ComposeToolbar(textAttributes: textAttributes, keyboardShown: $keyboardShown, selection: $selection)
 }

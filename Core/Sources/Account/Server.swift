@@ -34,20 +34,6 @@ public struct Server: Codable, Equatable, Hashable, Identifiable, Sendable {
     public var hostname: String
     public var port: Int
 
-    /// Store server credentials locally in the [Apple keychain.](https://developer.apple.com/documentation/security/storing-keys-in-the-keychain)
-    public var authorization: Authorization {
-        set {  // Swap in keychain-specific user name
-            let authorization: Authorization = Authorization(user: user, password: newValue.password)
-            URLCredentialStorage.shared.set(authorization: authorization, persistence: .permanent)
-        }
-        get {
-            guard let authorization: Authorization = URLCredentialStorage.shared.authorization(for: user) else {
-                return .none
-            }
-            return Authorization(user: username, password: authorization.password)  // Swap out keychain-specific user name
-        }
-    }
-
     public init(
         _ serverProtocol: ServerProtocol,
         connectionSecurity: ConnectionSecurity = .none,
@@ -102,7 +88,7 @@ extension IMAPError {
 }
 
 extension IMAP.Server {
-    public init(_ server: Server) throws {
+    public init(_ server: Server, authorization: Authorization) throws {
         guard server.serverProtocol == .imap else {
             throw IMAPError.serverProtocolMismatch
         }
@@ -113,7 +99,7 @@ extension IMAP.Server {
             IMAP.ConnectionSecurity(server.connectionSecurity),
             hostname: server.hostname,
             username: server.username,
-            password: server.authorization.rawValue,
+            password: authorization.rawValue,
             port: server.port
         )
     }
@@ -127,14 +113,14 @@ extension JMAPError {
 }
 
 extension JMAP.Server {
-    public init(_ server: Server) throws {
+    public init(_ server: Server, authorization: Authorization) throws {
         guard server.serverProtocol == .jmap else {
             throw JMAPError.serverProtocolMismatch
         }
         guard server.authenticationType != .oAuth2 else {
             throw JMAPError.oAuth2NotSupported
         }
-        self.init(authorization: .bearer(server.authorization.rawValue), host: server.hostname, port: server.port)
+        self.init(authorization: .bearer(authorization.rawValue), host: server.hostname, port: server.port)
     }
 }
 
@@ -145,7 +131,7 @@ extension SMTPError {
 }
 
 extension SMTP.Server {
-    public init(_ server: Server) throws {
+    public init(_ server: Server, authorization: Authorization) throws {
         guard server.serverProtocol == .smtp else {
             throw SMTPError.serverProtocolMismatch
         }
@@ -155,7 +141,7 @@ extension SMTP.Server {
         guard server.authenticationType != .oAuth2 else {
             throw SMTPError.serverProtocolMismatch
         }
-        self.init(hostname: server.hostname, username: server.username, password: server.authorization.rawValue)
+        self.init(hostname: server.hostname, username: server.username, password: authorization.rawValue)
     }
 }
 
@@ -192,7 +178,7 @@ private extension Authorization {
     var rawValue: String {
         switch self {
         case .basic(_, let password): password
-        case .oauth(_, let token): token.value
+        case .oauth(_, let token, _): token.value
         case .none: ""
         }
     }

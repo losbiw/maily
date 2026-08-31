@@ -18,13 +18,8 @@ public struct Email: Identifiable, Sendable {
 
     public var contentType: MIME.ContentType { body.contentType }
 
-    public var messageID: String {
-        // Format: https://www.jwz.org/doc/mid.html
-        let local: String = "\(Int(date.timeIntervalSince1970)).\(id.uuidString(1))"
-        guard let host: String = sender.host else {
-            return "<\(local)>"
-        }
-        return "<\(local)@\(host)>"
+    public var messageID: MessageID {
+        MessageID(sender.host ?? "", date: date, uuid: id)
     }
 
     public init(

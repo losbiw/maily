@@ -1,16 +1,14 @@
-//
-//  MailboxDropdownRowView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 5/7/26.
-//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Account
 import SwiftUI
 
-let iconShapes = FolderIconShapes()
+private let iconShapes = FolderIconShapes()
+
 struct MailboxDropdownRowView: View {
-    @State var isExpanded: Bool = false
+    @State private var isExpanded: Bool = false
     var mailbox: Mailbox
 
     //TODO: Subfolders and 'new' are not fully implemented
@@ -54,13 +52,14 @@ struct MailboxDropdownRowView: View {
 }
 
 #Preview {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var accountManager: AccountManager = AccountManager()
     @Previewable @State var mailbox: Mailbox = Mailbox("Inbox", unreadEmails: 2)
-    MailboxDropdownRowView(mailbox: mailbox).environment(accounts)
+
+    MailboxDropdownRowView(mailbox: mailbox)
+        .environment(accountManager)
 }
 
 @ViewBuilder func iconSwitcher(folderName: String, tinted: Bool) -> some View {
-
     switch iconName(folderName: folderName) {
     case "inbox":
         tinted ? iconShapes.inboxPathTinted : iconShapes.inboxPath

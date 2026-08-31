@@ -83,7 +83,6 @@ struct BodyTests {
 
     // MARK: RawRepresentable
     @Test(arguments: mocks) func rawValue(_ mock: Mock) throws {
-        print("\(mock.uuid): \(try Body(try .mock(mock.uuid)).rawValue.count)")
         #expect(try Body(try .mock(mock.uuid)).rawValue.count == mock.bytes)
     }
 }

@@ -58,7 +58,7 @@ public struct Envelope: Sendable {
 }
 
 extension String {
-    init?(_ messageID: MessageID?) {
+    init?(_ messageID: NIOIMAPCore.MessageID?) {
         guard let messageID else {
             return nil
         }

@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    cool-down:
+    cooldown:
       default-days: 7
     labels:
       - "type: dependency"
@@ -20,7 +20,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    cool-down:
+    cooldown:
       default-days: 7
     labels:
       - "type: dependency"

@@ -80,7 +80,7 @@ extension IMAP.Mailbox.Path {
     var suggestedRights: Mailbox.Rights {
         // IMAP mailbox rights all default to true if MYRIGHTS is
         // unavailable from provider:
-        // https://datatracker.ietf.org/doc/html/rfc8440
+        // https://www.rfc-editor.org/info/rfc8440/
         if let pathSeparator, name.description.components(separatedBy: "\(pathSeparator)")[0].hasPrefix("[Gmail]") {
             // Gmail allows renaming and deleting label mailboxes, but
             // [Gmail]-prefixed internal folders can't be modified.

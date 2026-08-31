@@ -1,9 +1,3 @@
-//
-//  FeatureFlagDebugView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 11/14/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
@@ -13,6 +7,7 @@ import SwiftUI
 struct FeatureFlagDebugView: View {
     @Environment(FeatureFlags.self) private var flags: FeatureFlags
     @State private var allowRemoteFlags = false
+
     var body: some View {
         VStack {
             Toggle("all_remote_feature_flags", isOn: $allowRemoteFlags).padding()
@@ -29,14 +24,14 @@ struct FeatureFlagDebugView: View {
 }
 
 struct SettingRowView: View {
-    @Environment(FeatureFlags.self) private var flags: FeatureFlags
     init(_ flagName: String, _ onState: Bool) {
 
         self.flagName = flagName
         self.isOn = onState
     }
-    @State private var isOn: Bool
 
+    @Environment(FeatureFlags.self) private var flags: FeatureFlags
+    @State private var isOn: Bool
     private var flagName: String
 
     var body: some View {

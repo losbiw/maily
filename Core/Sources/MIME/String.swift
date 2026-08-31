@@ -34,6 +34,65 @@ extension String {
         }
     }
 
+    /// Decode common HTML entities to `Character` equivalents.
+    public func htmlEntitiesDecoded() -> Self {
+
+        // Source - https://stackoverflow.com/a/30141700
+        // Posted by Martin R, modified by community
+        // Retrieved 2026-08-11, License - CC BY-SA 4.0
+
+        // Convert the number in the string to the corresponding Unicode character.
+        // Example: decodeNumeric("64", 10)   --> "@"
+        //          decodeNumeric("20ac", 16) --> "€"
+        func decodeNumeric(_ substring: Substring, base: Int) -> Character? {
+            guard let value: UInt32 = UInt32(substring, radix: base),
+                let scalar: UnicodeScalar = UnicodeScalar(value)
+            else {
+                return nil
+            }
+            return Character(scalar)
+        }
+
+        // Decode the HTML character entity to the corresponding Unicode character.
+        // Example: decode("&#64;")    --> "@"
+        //          decode("&#x20ac;") --> "€"
+        //          decode("&lt;")     --> "<"
+        //          decode("&foo;")    --> nil
+        func decode(_ substring: Substring) -> Character? {
+            if substring.lowercased().hasPrefix("&#x") {
+                return decodeNumeric(substring.dropFirst(3).dropLast(), base: 16)
+            } else if substring.hasPrefix("&#") {
+                return decodeNumeric(substring.dropFirst(2).dropLast(), base: 10)
+            } else {
+                return Character(entity: "\(substring)")
+            }
+        }
+
+        var result: Self = ""
+        var position: Index = startIndex
+
+        // Find next ampersand; copy characters preceding it to result
+        while let ampRange: Range<Index> = self[position...].range(of: "&") {
+            result.append(contentsOf: self[position..<ampRange.lowerBound])
+            position = ampRange.lowerBound
+
+            // Find next semicolon; copy characters between "&" and ";"
+            guard let semiRange: Range<Index> = self[position...].range(of: ";") else {
+                continue
+            }
+            let entity: Substring = self[position..<semiRange.upperBound]
+            if let character: Character = decode(entity) {
+                result.append(character)
+                position = semiRange.upperBound
+            } else {
+                result.append(contentsOf: self[ampRange])
+                position = ampRange.upperBound
+            }
+        }
+        result.append(contentsOf: self[position...])  // Copy remaining characters to result:
+        return result
+    }
+
     /// Break email header value string into parameter keys and values.
     public var parameters: [Self: Self] {
         var parameters: [Self: Self] = [:]
@@ -103,7 +162,7 @@ extension String {
 
     /// Decode quoted-printable data to given `String.Encoding`.
     public init(quotedPrintable data: Data, encoding: Encoding = .utf8) throws {
-        guard let string: String = String(data: data, encoding: encoding) else {
+        guard let string: String = String(data: data, encoding: .ascii) else {
             throw MIMEError.dataNotDecoded(data, encoding: encoding)
         }
         self = try Self(quotedPrintable: string, encoding: encoding)
@@ -116,7 +175,7 @@ extension String {
 
     /// Decode base64 data to given `String.Encoding`.
     public init(base64 data: Data, encoding: Encoding = .utf8) throws {
-        guard let string: String = String(data: data, encoding: .utf8) else {
+        guard let string: String = String(data: data, encoding: .ascii) else {
             throw MIMEError.dataNotDecoded(data, encoding: encoding)
         }
         self = try string.decodingBase64(to: encoding)
@@ -128,32 +187,75 @@ extension String {
     }
 
     func decodingBase64(to encoding: Encoding = .utf8) throws -> Self {
-        guard let data: Data = Data(base64Encoded: self),
-            let string: Self = Self(data: data, encoding: encoding)
-        else {
-            throw MIMEError.headerNotDecoded(self)
+        guard let data: Data = Data(base64Encoded: self, options: .ignoreUnknownCharacters) else {
+            if let data: Data = self.data(using: .ascii) {
+                throw MIMEError.dataNotDecoded(data, encoding: encoding)
+            } else {
+                throw MIMEError.dataNotFound
+            }
+        }
+        guard let string: Self = Self(data: data, encoding: encoding) else {
+            throw MIMEError.dataNotDecoded(data, encoding: encoding)
         }
         return string
     }
 
     func decodingQuotedPrintable(to encoding: Encoding = .utf8) throws -> Self {
-        guard
-            let string: String = replacingOccurrences(of: "=\r\n", with: "")  // Remove quoted-printable line-limit wrapping
-                .replacingOccurrences(of: "=\n", with: "")  // Remove quoted-printable line-limit wrapping
-                .replacingOccurrences(of: "%", with: "%25")  // Percent-encode percent control character
-                .replacingOccurrences(of: "=", with: "%")  // Swap quoted-printable and percent-encoding control characters
-                .replacingOccurrences(of: "_", with: " ")
-                .removingPercentEncoding  // Use built-in percent-encoded decoding
-        else {
-            throw MIMEError.dataNotQuotedPrintable
+        try replacingOccurrences(of: "= ", with: "=\n")  // Fix failed line-limit wrapping
+            .replacingOccurrences(of: "=\r\n", with: "")  // Remove quoted-printable line-limit wrapping
+            .replacingOccurrences(of: "=\n", with: "")  // Remove quoted-printable line-limit wrapping
+            .decodingQuotedPrintableEncoding(to: encoding)
+    }
+
+    func decodingQuotedPrintableEncoding(to encoding: Encoding = .utf8) throws -> Self {
+
+        // Source - https://stackoverflow.com/a/32827598
+        // Posted by Martin R, modified by community
+        // Retrieved 2026-07-28, License - CC BY-SA 4.0
+        var result: Self = ""
+        var position: Index = startIndex
+
+        // Find next "=" control character; copy characters preceding it to the result
+        while let range: Range<Index> = range(of: "=", range: position..<endIndex) {
+            result.append(contentsOf: self[position..<range.lowerBound])
+            position = range.lowerBound
+
+            // Decode one or more successive "=HH" sequences to a byte array
+            var data: Data = Data()
+            repeat {
+                let hexCode: Substring = self[position...].dropFirst().prefix(2)
+                guard hexCode.count == 2, let byte: UInt8 = UInt8(hexCode, radix: 16) else {
+                    throw MIMEError.dataNotQuotedPrintable
+                }
+                data.append(byte)
+                position = index(position, offsetBy: 3)
+            } while position != endIndex && self[position] == "="
+
+            // Convert the byte array to a string; append it to the result
+            guard let string: Self = Self(data: data, encoding: encoding) else {
+                throw MIMEError.dataNotQuotedPrintable
+            }
+            result.append(contentsOf: string)
         }
-        return string
+        result.append(contentsOf: self[position..<endIndex])
+        return result
     }
 
     func removing(_ characters: [Character]) -> Self {
         var string: Self = "\(self)"
         for character in characters {
             string = string.replacingOccurrences(of: "\(character)", with: "")
+        }
+        return string
+    }
+
+    func unwrapping(_ prefix: String, _ suffix: String) -> Self {
+        var string: Self = "\(self)"
+        if hasPrefix(prefix) {
+            string = "\(string.dropFirst(prefix.count))"
+        }
+        if hasSuffix(suffix) {
+            string = "\(string.dropLast(suffix.count))"
         }
         return string
     }

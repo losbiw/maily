@@ -61,6 +61,42 @@ extension AccountTests {
     }
 }
 
+extension AccountTests {
+    @Test(.enabled(if: isKeychainAvailable)) func authorization() async throws {
+        var account: Account = try await .autoconfig("example@fastmail.com", isJMAPAvailable: true)
+        #expect(account.authorization == .none)
+        account.authorization =
+            .oauth(
+                user: "user@example.com",
+                token: .bearer("zemhu8-omdRiz-zisbov", Date()),
+                refresh: .refresh("fakeRefreshToken")
+            )
+        #expect(URLCredentialStorage.shared.authorization(for: account.incomingServer!.user) != nil)
+        #expect(account.authorization.user == "user@example.com")
+        #expect(account.authorization.password == "zemhu8-omdRiz-zisbov")
+        switch account.authorization {
+        case .oauth(let user, let token, let refresh):
+            #expect(user == "user@example.com")
+            #expect(token.value == "zemhu8-omdRiz-zisbov")
+            #expect(refresh.value == "fakeRefreshToken")
+        default:
+            throw URLError(.redirectToNonExistentLocation)
+        }
+        account.authorization = .basic(user: "user@example.com", password: "P@$$w0rd!")
+        #expect(account.authorization.user == "user@example.com")
+        #expect(account.authorization.password == "dXNlckBleGFtcGxlLmNvbTpQQCQkdzByZCE=")
+        switch account.authorization {
+        case .basic(let user, let password):
+            #expect(user == "user@example.com")
+            #expect(password == "P@$$w0rd!")
+        default:
+            throw URLError(.redirectToNonExistentLocation)
+        }
+        account.authorization = .none
+        #expect(URLCredentialStorage.shared.authorization(for: account.incomingServer!.user) == nil)
+    }
+}
+
 private extension Account {
     static var imap: Self {
         Self(

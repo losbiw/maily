@@ -4,20 +4,39 @@
 
 import Foundation
 
-public enum Token: CustomStringConvertible, Equatable, ExpressibleByStringLiteral {
-    case bearer(String)
+public enum Token: CustomStringConvertible, Equatable {
+    case bearer(String, Date)
+    case refresh(String)
 
     var value: String {
         switch self {
-        case .bearer(let token): token
+        case .bearer(let token, _): token
+        case .refresh(let token): token
+        }
+    }
+
+    var isExpired: Bool {
+        switch self {
+        case .bearer(_, let expiration): return Date() > expiration
+        case .refresh(_): return false
+        }
+    }
+
+    var tokenExpiration: Date? {
+        switch self {
+        case .bearer(_, let expiration): return expiration
+        case .refresh(_): return nil
         }
     }
 
     // MARK: CustomStringConvertible
     public var description: String { value }
 
-    // MARK: ExpressibleByStringLiteral
-    public init(stringLiteral value: String) {
-        self = .bearer(value)
+    public init(value: String, expiration: Date) {
+        self = .bearer(value, expiration)
+    }
+
+    public init(value: String) {
+        self = .refresh(value)
     }
 }

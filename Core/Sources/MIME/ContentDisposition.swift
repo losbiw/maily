@@ -83,6 +83,13 @@ public enum ContentDisposition: CustomStringConvertible, Equatable, RawRepresent
     public static var attachment: Self { .attachment(File()) }
     public static var inline: Self { .inline(File()) }
 
+    public var file: File? {
+        switch self {
+        case .attachment(let file), .inline(let file): file
+        default: nil
+        }
+    }
+
     public init(_ description: String) throws {
         switch description.components(separatedBy: ";")[0].lowercased().trimmed() {
         case Self.attachment.value:

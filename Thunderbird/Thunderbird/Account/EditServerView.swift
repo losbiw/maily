@@ -6,11 +6,13 @@ import Account
 import SwiftUI
 
 struct EditServerView: View {
-    init(_ server: Binding<Server>) {
+    init(_ server: Binding<Server>, _ account: Binding<Account>) {
         _server = server
+        _account = account
     }
 
     @Binding private var server: Server
+    @Binding private var account: Account
     @State private var password: String = ""
     @State private var error: Error?
 
@@ -75,10 +77,10 @@ struct EditServerView: View {
                 }
             }
             AuthorizationView(
-                $server.authorization,
+                $account.authorization,
                 error: $error,
                 for: server.username,
-                authenticationType: server.authenticationType
+                authenticationType: server.authenticationType,
             )
         }
         .textFieldStyle(.roundedBorder)
@@ -92,9 +94,10 @@ struct EditServerView: View {
 
 #Preview("Edit Server View") {
     @Previewable @State var server: Server = Server(.imap, username: "user@example.com")
+    @Previewable @State var account: Account = Account("user@example.com")
 
     ScrollView {
-        EditServerView($server)
+        EditServerView($server, $account)
             .padding()
     }
 }

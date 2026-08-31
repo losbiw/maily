@@ -28,9 +28,38 @@ public struct Account: Codable, Equatable, Hashable, Identifiable, FetchableReco
     public var identities: [EmailAddress]
     public var servers: [Server]
     public var avatarColor: String
+    public var authConfig: OAuth2.Request?
 
     public var incomingServer: Server? { server(.jmap) ?? server(.imap) ?? nil }
     public var outgoingServer: Server? { server(.jmap) ?? server(.smtp) ?? nil }
+
+    /// Store server credentials locally in the [Apple keychain.](https://developer.apple.com/documentation/security/storing-keys-in-the-keychain)
+    public var authorization: Authorization {
+        set {  // Swap in keychain-specific user name
+            let newAuth: Authorization = Authorization(
+                user: incomingServer!.user,
+                password: newValue.password
+            )
+            URLCredentialStorage.shared.set(authorization: newAuth, persistence: .permanent)
+        }
+        get {
+            guard let newAuth: Authorization = URLCredentialStorage.shared.authorization(for: incomingServer!.user) else {
+                return .none
+            }
+            return Authorization(
+                user: incomingServer!.username,
+                password: newAuth.password
+            )  // Swap out keychain-specific user name
+        }
+    }
+
+    public func deleteAuthorization() {
+        let deleteAuth: Authorization = Authorization(
+            user: incomingServer!.user,
+            password: ""
+        )
+        URLCredentialStorage.shared.set(authorization: deleteAuth)
+    }
 
     public var emailProtocol: EmailProtocol {
         servers.map { $0.serverProtocol }.contains(.jmap) ? .jmap : .imap
@@ -63,7 +92,7 @@ public struct Account: Codable, Equatable, Hashable, Identifiable, FetchableReco
         identities: [EmailAddress] = [],
         servers: [Server] = [],
         id: UUID = UUID(),
-        avatar: String = "user-blue"
+        avatar: String = "user-blue",
     ) {
         self.name = name
         self.deletePolicy = deletePolicy
@@ -125,7 +154,7 @@ extension Account {
                 guard let incomingServer else {
                     throw IMAPError.serverProtocolMismatch
                 }
-                let client: IMAPClient = IMAPClient(try IMAP.Server(incomingServer))
+                let client: IMAPClient = IMAPClient(try IMAP.Server(incomingServer, authorization: authorization))
                 try await client.connect()
                 try await client.login()
                 Self.clients[id] = client  // Donate to shared pool
@@ -144,7 +173,7 @@ extension Account {
                 guard let server: Server = servers.first else {
                     throw JMAPError.serverProtocolMismatch
                 }
-                let client: JMAPClient = try await .session(try JMAP.Server(server))
+                let client: JMAPClient = try await .session(try JMAP.Server(server, authorization: authorization))
                 guard client.session != nil else {
                     throw JMAPError.sessionNotFound
                 }

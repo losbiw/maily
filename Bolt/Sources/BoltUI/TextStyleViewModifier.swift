@@ -19,7 +19,7 @@ struct TextStyleViewModifier: ViewModifier {
         self.isDynamic = isDynamic
     }
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
 
     // MARK: ViewModifier
     func body(content: Content) -> some View {

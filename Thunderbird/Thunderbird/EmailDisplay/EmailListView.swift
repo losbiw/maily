@@ -1,28 +1,24 @@
-//
-//  EmailListView.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 10/20/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
+import SwiftUI
 
 struct EmailListView: View {
     @Environment(SessionManager.self) private var session: SessionManager
-    
-    @State private var selections = Set<String>()
+
+    @State private var selections: Set<UUID> = []
     @State private var path = NavigationPath()
     @State private var emails: [Email] = []
-    
+
     // MARK: UI State
     @State private var showDrawer = false
+    #if os(iOS)
     @State var editMode: EditMode = .inactive
-    @State var error: Error?
-        
+    #endif
+    @State var error: EmailError?
+
     func sortEmails(by strategy: SortStrategy) {
         //Not yet implemented
         AlertManager.shared.showAlert = true
@@ -70,6 +66,7 @@ struct EmailListView: View {
                                 EmailCellView(email: email)
                             }
                             .contentShape(Rectangle())
+                            #if os(iOS)
                             .simultaneousGesture(
                                 LongPressGesture().onEnded { _ in
                                     withAnimation {
@@ -77,27 +74,31 @@ struct EmailListView: View {
                                     }
                                 }
                             )
+                            #endif
                             .listRowSeparator(.hidden)
                             .navigationLinkIndicatorVisibility(.hidden)
                         }
-                        
+
                         ProgressView()
                             .progressViewStyle(.circular)
                             .onAppear {
                                 do {
                                     let oldestEmail = emails.first!
                                     let additionalEmails = try session.loadEmails(cursor: oldestEmail.uid)
-                                    
+
                                     emails.append(contentsOf: additionalEmails)
                                 } catch {
                                     self.error = error
                                 }
                             }
-                    }.environment(\.editMode, $editMode)
-                        .listStyle(.plain)
-                        .scrollContentBackground(.hidden)
+                    }
+                    #if os(iOS)
+                    .environment(\.editMode, $editMode)
+                    #endif
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
-                
+
                 Button {
                     path.append("compose")
                 } label: {
@@ -116,15 +117,16 @@ struct EmailListView: View {
                         ComposeView()
                     }
                 }
-                
+
                 DrawerView(showDrawer: $showDrawer)
                     .environment(session)
             }
             .navigationTitle("inbox_header")
-            
+            #if os(iOS)
             .navigationBarBackButtonHidden(editMode.isEditing)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .leading) {
                     Button {
                         withAnimation {
                             showDrawer = true
@@ -133,6 +135,7 @@ struct EmailListView: View {
                         Label("account", systemImage: "line.3.horizontal")
                     }
                 }
+                #if os(iOS)
                 ToolbarItem(placement: .cancellationAction) {
                     if editMode.isEditing == true {
                         Button(
@@ -144,7 +147,8 @@ struct EmailListView: View {
                             })
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                #endif
+                ToolbarItem(placement: .trailing) {
                     Menu {
                         Button(
                             "date_sort_button",
@@ -165,8 +169,9 @@ struct EmailListView: View {
                         Label("sort_button", systemImage: "line.3.horizontal.decrease", )
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .trailing) {
                     Menu {
+                        #if os(iOS)
                         Button(
                             editMode.isEditing ? "done_button" : "select_all_button",
                             action: {
@@ -175,6 +180,7 @@ struct EmailListView: View {
                                 }
                                 selectAll()
                             })
+                        #endif
                         Button(
                             "mark_all_read_button",
                             action: {
@@ -219,8 +225,26 @@ public enum SortStrategy {
     @Previewable @State var flags: FeatureFlags = FeatureFlags(distribution: .current)
     @Previewable @State var store = LocalStore()
     @Previewable @State var accountManager = AccountManager(store: store)
-    
+
     EmailListView()
         .environment(flags)
         .environment(accountManager)
+}
+
+private extension ToolbarItemPlacement {
+    static var leading: Self {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .automatic
+        #endif
+    }
+
+    static var trailing: Self {
+        #if os(iOS)
+        .topBarTrailing
+        #else
+        .automatic
+        #endif
+    }
 }

@@ -11,25 +11,35 @@ struct AuthorizationView: View {
     let username: String
     let authenticationType: AuthenticationType
 
-    init(_ authorization: Binding<Authorization>, error: Binding<Error?>, for username: String, authenticationType: AuthenticationType = .oAuth2) {
+    init(
+        _ authorization: Binding<Authorization>,
+        error: Binding<Error?>,
+        for username: String,
+        authenticationType: AuthenticationType = .oAuth2,
+        authConfig: Binding<OAuth2.Request?> = .constant(nil)
+    ) {
         self.username = username
         self.authenticationType = authenticationType
         _authorization = authorization
         switch authorization.wrappedValue {
         case .basic(_, let password):
             self.password = password
-        case .oauth(_, let token):
+        case .oauth(_, let token, let refreshToken):
             self.token = token
+            self.refreshToken = refreshToken
         case .none:
             break
         }
         _error = error
+        _authConfig = authConfig
     }
 
     @Binding private var authorization: Authorization
+    @Binding private var authConfig: OAuth2.Request?
     @Binding private var error: Error?
     @State private var password: String = ""
     @State private var token: Token?
+    @State private var refreshToken: Token?
 
     // MARK: View
     var body: some View {
@@ -40,10 +50,10 @@ struct AuthorizationView: View {
                     authorization = .basic(user: username, password: password)
                 }
         case .oAuth2:
-            OAuthButton(username, token: $token, error: $error)
+            OAuthButton(username, token: $token, refreshToken: $refreshToken, authConfig: $authConfig, error: $error)
                 .onChange(of: token, initial: true) {
-                    if let token {
-                        authorization = .oauth(user: username, token: token)
+                    if let token, let refreshToken {
+                        authorization = .oauth(user: username, token: token, refresh: refreshToken)
                     } else {
                         authorization = .none
                     }
@@ -57,7 +67,8 @@ struct AuthorizationView: View {
 #Preview("Authorization View") {
     @Previewable @State var authorization: Authorization = .none
     @Previewable @State var error: Error?
+    @Previewable @State var auth: OAuth2.Request? = .google
 
-    AuthorizationView($authorization, error: $error, for: "example@thunderbird.net")
+    AuthorizationView($authorization, error: $error, for: "example@thunderbird.net", authConfig: $auth)
         .padding()
 }

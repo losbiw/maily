@@ -47,7 +47,7 @@ extension Account {
                         guard let incomingServer: Server = account.incomingServer else {
                             throw IMAPError.serverProtocolMismatch
                         }
-                        let client: IMAPClient = IMAPClient(try IMAP.Server(incomingServer))
+                        let client: IMAPClient = IMAPClient(try IMAP.Server(incomingServer, authorization: authorization))
                         try await client.connect()
                         continuation.yield(.success(description))
                         description = "IMAP AUTHENTICATE"
@@ -62,7 +62,7 @@ extension Account {
                         guard let outgoingServer: Server = account.outgoingServer else {
                             throw SMTPError.serverProtocolMismatch
                         }
-                        let _: SMTPClient = SMTPClient(try SMTP.Server(outgoingServer))
+                        let _: SMTPClient = SMTPClient(try SMTP.Server(outgoingServer, authorization: authorization))
                         continuation.yield(.success(description))
                     } catch {
                         continuation.yield(.failure(description, error: error))
@@ -72,7 +72,7 @@ extension Account {
                         guard let server: Server = account.servers.first else {
                             throw JMAPError.serverProtocolMismatch
                         }
-                        let client: JMAPClient = try await .session(try JMAP.Server(server))
+                        let client: JMAPClient = try await .session(try JMAP.Server(server, authorization: authorization))
                         guard let session: Session = client.session else {
                             throw JMAPError.sessionNotFound
                         }

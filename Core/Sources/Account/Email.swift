@@ -22,7 +22,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
     public let threadID: [String]
     public let inReplyTo: [String]
     public let subject: String?
-    public let body: Body?
+    public let body: EmailBody?
     public let blobID: String?
     public let uid: UID?
     public let snippet: String?
@@ -42,7 +42,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
         threadID: [String] = [],
         inReplyTo: [String] = [],
         subject: String? = nil,
-        body: Body? = nil,
+        body: EmailBody? = nil,
         blobID: String? = nil,
         flags: Set<Flag>,
         uid: UID? = nil,
@@ -108,7 +108,7 @@ extension Email {
             threadID: message.threadIDs,
             inReplyTo: message.inReplyTo,
             subject: message.envelope.subject,
-            body: message.body,
+            body: try? EmailBody(body: message.body),
             flags: message.flags,
             uid: message.uid,
             snippet: message.snippet,
@@ -131,7 +131,7 @@ extension Email {
             threadID: [email.threadID],
             inReplyTo: email.inReplyTo ?? [],
             subject: email.subject,
-            body: try? Body(email),
+            body: try? EmailBody(email: email),
             blobID: email.blobID,
             // FIXME: replace the flags placeholder
             flags: Set(),
@@ -182,7 +182,7 @@ extension IMAP.Message {
     // Map back to IMAP message
     init(_ email: Email) {
         self.init(
-            body: email.body,
+            body: nil,  // email.body,
             emailID: email.id,
             envelope: Envelope(
                 subject: email.subject,

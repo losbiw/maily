@@ -2,16 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import InfomaniakRichHTMLEditor
+import SwiftUI
 
 struct EmailBodyView: View {
-    @Environment(\.openURL) var openURL
-
+    @Environment(\.openURL) private var openURL: OpenURLAction
     @State var html = String.sampleHTML
-
     @State private var selection = ""
-    @StateObject private var textAttributes = TextAttributes()
+    @State private var textAttributes = TextAttributes()
     @FocusState private var keyboardShown: Bool
     let editable: Bool
 

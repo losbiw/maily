@@ -5,10 +5,26 @@
 import Foundation
 
 extension URLRequest {
-    public static func token(_ request: OAuth2.Request, code: String) throws -> Self {
+    public static func token(_ request: OAuth2.Request, code: String, pkce: OAuth2.PKCE) throws -> Self {
         guard
             var components: URLComponents = URLComponents(
-                url: request.tokenURL(code),
+                url: request.tokenURL(code, pkce: pkce),
+                resolvingAgainstBaseURL: false
+            ), let httpBody: Data = components.percentEncodedQuery?.data(using: .utf8)
+        else {
+            throw URLError(.badURL)
+        }
+        components.queryItems = nil
+        var request: Self = Self(url: components.url!)
+        request.httpMethod = "POST"
+        request.httpBody = httpBody
+        return request
+    }
+
+    public static func refreshToken(_ request: OAuth2.Request, refreshToken: String) throws -> Self {
+        guard
+            var components: URLComponents = URLComponents(
+                url: request.refreshTokenURL(refreshToken),
                 resolvingAgainstBaseURL: false
             ), let httpBody: Data = components.percentEncodedQuery?.data(using: .utf8)
         else {

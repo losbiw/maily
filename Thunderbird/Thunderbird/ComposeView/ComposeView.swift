@@ -11,7 +11,7 @@ struct ComposeView: View {
     var body: some View {
         EmailBodyView(editable: true)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .trailing) {
                     Button(action: {
 
                     }) {
@@ -20,5 +20,15 @@ struct ComposeView: View {
                     }
                 }
             }
+    }
+}
+
+private extension ToolbarItemPlacement {
+    static var trailing: Self {
+        #if os(iOS)
+        .topBarTrailing
+        #else
+        .automatic
+        #endif
     }
 }

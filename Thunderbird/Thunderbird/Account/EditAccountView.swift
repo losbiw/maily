@@ -12,8 +12,8 @@ struct EditAccountView: View {
         self.outgoingServer = account.outgoingServer?.clone() ?? Server(.smtp)
     }
 
-    @Environment(Accounts.self) private var accounts: Accounts
-    @Environment(\.dismiss) var dismiss
+    @Environment(AccountManager.self) private var accountManager: AccountManager
+    @Environment(\.dismiss) private var dismiss: DismissAction
     @State private var account: Account
     @State private var incomingServer: Server
     @State private var outgoingServer: Server
@@ -24,11 +24,11 @@ struct EditAccountView: View {
             VStack(alignment: .leading) {
                 Text("Incoming Server")
                     .font(.headline)
-                EditServerView($incomingServer)
+                EditServerView($incomingServer, $account)
                 Divider()
                 Text("Outgoing Server")
                     .font(.headline)
-                EditServerView($outgoingServer)
+                EditServerView($outgoingServer, $account)
 
             }
             .padding()
@@ -40,7 +40,7 @@ struct EditAccountView: View {
                     incomingServer,
                     outgoingServer
                 ]
-                accounts.set(account)
+                accountManager.set(account)
                 dismiss()
             }) {
                 Text("Save")
@@ -54,23 +54,3 @@ struct EditAccountView: View {
         EditAccountView(Account("example@thunderbird.net"))
     }
 }
-
-//private extension Server {
-//    func clone() -> Self {
-//        var server: Self = Server(
-//            serverProtocol,
-//            connectionSecurity: connectionSecurity,
-//            authenticationType: authenticationType,
-//            username: username,
-//            hostname: hostname,
-//            port: port
-//        )
-//        switch authorization {
-//        case .basic(let user, let password): print("basic(user: \(user); password: \(password))")
-//        case .oauth(let user, let password): print("oauth(user: \(user); password: \(password))")
-//        case .none: print("none")
-//        }
-//        server.authorization = authorization
-//        return server
-//    }
-//}

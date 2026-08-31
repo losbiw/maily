@@ -1,11 +1,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import Account
 import SwiftUI
 
 struct AccountsView: View {
-    @Environment(Accounts.self) private var accounts: Accounts
+    @Environment(AccountManager.self) private var accountManager: AccountManager
 
     // MARK: View
     var body: some View {
@@ -13,11 +14,11 @@ struct AccountsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 17.0) {
                     // List all accounts
-                    ForEach(accounts.allAccounts) { account in
+                    ForEach(accountManager.allAccounts) { account in
                         HStack {
                             // Delete account
                             Button(action: {
-                                accounts.delete(account)
+                                accountManager.delete(account)
                             }) {
                                 Image(systemName: "trash")
                             }
@@ -54,9 +55,12 @@ struct AccountsView: View {
 }
 
 #Preview("Accounts View") {
+    @Previewable @State var accountManager: AccountManager = AccountManager()
+
     NavigationStack {
         AccountsView()
     }
+    .environment(accountManager)
 }
 
 private extension ToolbarItemPlacement {

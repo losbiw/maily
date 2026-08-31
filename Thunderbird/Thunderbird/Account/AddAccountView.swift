@@ -11,8 +11,8 @@ struct AddAccountView: View {
         self.emailAddress = emailAddress
     }
 
-    @Environment(Accounts.self) private var accounts: Accounts
-    @Environment(\.dismiss) var dismiss
+    @Environment(AccountManager.self) private var accountManager: AccountManager
+    @Environment(\.dismiss) private var dismiss: DismissAction
     @State private var showManual: Bool = false
     @State private var emailAddress: String
     @State private var account: Account?
@@ -53,7 +53,7 @@ struct AddAccountView: View {
         .toolbar {
             Button(action: {
                 guard let account else { return }
-                accounts.set(account)
+                accountManager.set(account)
                 dismiss()
             }) {
                 Text("Save")
@@ -64,8 +64,8 @@ struct AddAccountView: View {
 }
 
 #Preview("Add Account View") {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var accountManager: AccountManager = AccountManager()
 
     AddAccountView()
-        .environment(accounts)
+        .environment(accountManager)
 }

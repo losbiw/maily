@@ -1,18 +1,21 @@
-// UnreadCounter.swift
-// Thunderbird
-//
-// Created by Ashley Soucar on 7/14/26.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
 
 import SwiftUI
 
+///- Parameters:
+///  - unreadCount: number of unread messages
+///  - hasNew: do any of the unread messages qualify as 'new'
 struct UnreadCounter: View {
-    @State var unreadCount: Int = 0
-    @State var hasNew: Bool = false
+    init(unreadCount: Int = 0, hasNew: Bool = false) {
+        self.unreadCount = unreadCount
+        self.hasNew = hasNew
+    }
+
+    @State private var unreadCount: Int = 0
+    @State private var hasNew: Bool = false
+
     var body: some View {
         Text("\(unreadCount)")
             .font(.caption2)

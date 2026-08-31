@@ -1,16 +1,10 @@
-//
-//  AcccountInformation.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 8/28/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
 import Autoconfiguration
+import SwiftUI
 
 struct AccountInformation: View {
     init(_ path: Binding<NavigationPath>) {
@@ -27,12 +21,15 @@ struct AccountInformation: View {
     @State private var password: String = ""
     @State private var error: Error?
     @State private var loginServer: Server = Server(.imap)
+    @State private var loginAuth: Authorization = .none
+    @State private var loginAuthConfig: OAuth2.Request?
 
     private func refreshAccount() {
         account = emailAddress.isEmailAddress ? Account(emailAddress, provider: config?.emailProvider) : nil
         guard let account = account else { return }
         guard let incomingServer = account.incomingServer else { return }
         loginServer = incomingServer
+        loginAuth = account.authorization
     }
 
     var body: some View {
@@ -62,18 +59,22 @@ struct AccountInformation: View {
                     .buttonStyle(.plain)
                 if account?.incomingServer?.authenticationType != nil {
                     AuthorizationView(
-                        $loginServer.authorization,
+                        $loginAuth,
                         error: $error,
                         for: loginServer.username,
-                        authenticationType: loginServer.authenticationType
-                    ).onChange(of: loginServer.authorization) {
+                        authenticationType: loginServer.authenticationType,
+                        authConfig: $loginAuthConfig
+                    ).onChange(of: loginAuth) {
                         guard var account = account else { return }
-                        var incomingServerInfo = account.incomingServer?.clone() ?? Server(.imap)
-                        var outgoingServerInfo = account.outgoingServer?.clone() ?? Server(.smtp)
-                        incomingServerInfo.authorization = loginServer.authorization
-                        outgoingServerInfo.authorization = loginServer.authorization
+                        account.avatarColor = randomizeAvatarColor()
+                        var incomingServerInfo = account.incomingServer ?? Server(.imap)
+                        var outgoingServerInfo = account.outgoingServer ?? Server(.smtp)
+                        incomingServerInfo.username = emailAddress
+                        outgoingServerInfo.username = emailAddress
+                        account.authorization = loginAuth
+                        account.authConfig = loginAuthConfig
                         account.servers = [incomingServerInfo, outgoingServerInfo]
-                        
+
                         do {
                             try accountManager.set(account)
                         } catch {
@@ -107,7 +108,9 @@ struct AccountInformation: View {
             refreshAccount()
         }
         .scrollContentBackground(.hidden)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
+        #endif
         .navigationTitle("account_server_information_title")
     }
 }

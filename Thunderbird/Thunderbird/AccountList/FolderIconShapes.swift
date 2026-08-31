@@ -1,12 +1,6 @@
-// FolderIconShapes.swift
-// Thunderbird
-//
-// Created by Ashley Soucar on 7/15/26.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
 
 import SwiftUI
 
@@ -165,6 +159,7 @@ struct InboxIcon: View {
         }
     }
 }
+
 struct DraftIcon: View {
     var tinted: Bool = false
     var body: some View {
@@ -275,6 +270,7 @@ struct DraftIcon: View {
         }
     }
 }
+
 struct SentIcon: View {
     var tinted: Bool = false
     var body: some View {
@@ -366,6 +362,7 @@ struct SentIcon: View {
         }
     }
 }
+
 struct ArchiveIcon: View {
     var tinted: Bool = false
     var body: some View {
@@ -529,6 +526,7 @@ struct ArchiveIcon: View {
         }
     }
 }
+
 struct TrashIcon: View {
     var tinted: Bool = false
     var body: some View {
@@ -673,6 +671,7 @@ struct TrashIcon: View {
         }
     }
 }
+
 struct SpamIcon: View {
     var tinted: Bool = false
     var body: some View {
@@ -750,6 +749,7 @@ struct SpamIcon: View {
         }
     }
 }
+
 struct FolderIcon: View {
     var tinted: Bool = false
     var body: some View {

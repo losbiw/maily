@@ -2,31 +2,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
+import SwiftUI
 
 struct ComposeHeaderView: View {
-    @Environment(Accounts.self) private var accounts: Accounts
-
-    @State var subject: String = ""
-    @State var toRecipients: [String] = []
-    @State var replyToRecipients: [String] = []
-    @State var ccRecipients: [String] = []
-    @State var bccRecipients: [String] = []
-    @State var selectedSender: UUID = UUID()
-    @State var showCCBCC: Bool = false
-    @State var showReplyTo: Bool = false
+    @Environment(AccountManager.self) private var accountManager: AccountManager
+    @State private var subject: String = ""
+    @State private var toRecipients: [String] = []
+    @State private var replyToRecipients: [String] = []
+    @State private var ccRecipients: [String] = []
+    @State private var bccRecipients: [String] = []
+    @State private var selectedSender: UUID = UUID()
+    @State private var showCCBCC: Bool = false
+    @State private var showReplyTo: Bool = false
 
     var body: some View {
         VStack {
             Group {
                 HStack {
                     Picker("from_header", selection: $selectedSender) {
-                        ForEach(accounts.allAccounts) { account in
+                        ForEach(accountManager.allAccounts) { account in
                             Text(account.name).tag(account.id)
                         }
                     } currentValueLabel: {
-                        Text(accounts.account(for: selectedSender)?.name ?? "")
+                        Text(accountManager.account(for: selectedSender)?.name ?? "")
                     }
                     .pickerStyle(.menu)
 
@@ -88,6 +87,7 @@ struct MultiAddressBar: View {
         headerText = header
         _entryText = entryText
     }
+
     private var headerText: LocalizedStringResource
     @Binding private var entryText: [String]
     @State private var entryString: String = ""
@@ -100,8 +100,10 @@ struct MultiAddressBar: View {
                     .fixedSize()
                 TextField("", text: $entryString)
                     .textFieldStyle(.automatic)
+                    #if os(iOS)
+                .autocapitalization(.none)
+                    #endif
                     .autocorrectionDisabled()
-                    .autocapitalization(.none)
                     .focusable()
                     .onSubmit {
                         if entryString.isEmailAddress {
@@ -126,6 +128,7 @@ struct EmailPill: View {
         emailAddress = email
         _entries = currentEntries
     }
+
     @State private var emailAddress: String
     @Binding private var entries: [String]
 
@@ -145,8 +148,10 @@ struct EmailPill: View {
             }
     }
 }
+
 #Preview {
-    @Previewable @State var accounts: Accounts = Accounts()
+    @Previewable @State var accountManager: AccountManager = AccountManager()
+
     ComposeHeaderView()
-        .environment(accounts)
+        .environment(accountManager)
 }

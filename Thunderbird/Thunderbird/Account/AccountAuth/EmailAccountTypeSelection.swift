@@ -1,22 +1,16 @@
-//
-//  OutgoingAccountSetup.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 8/18/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
+import SwiftUI
 
 struct EmailAccountTypeSelection: View {
     init(_ path: Binding<NavigationPath>) {
         _path = path
     }
 
-    @Binding var path: NavigationPath
+    @Binding private var path: NavigationPath
     @Environment(LoginDetails.self) private var loginDetails: LoginDetails
     @State private var selectedJMAP: Bool = false
     @State private var selectedIMAP: Bool = false
@@ -82,13 +76,12 @@ struct EmailAccountTypeSelection: View {
                 .padding()
                 .buttonStyle(.borderedProminent)
         }
-
     }
 }
 
 struct FullToggleStyle: ToggleStyle {
-
     var systemImage: String = "checkmark"
+
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
@@ -108,7 +101,6 @@ struct FullToggleStyle: ToggleStyle {
                     Image(systemName: systemImage)
                         .foregroundColor(.buttonFillOff)
                 }
-
         }
         .onTapGesture {
             withAnimation(.spring()) {
@@ -127,6 +119,6 @@ struct FullToggleStyle: ToggleStyle {
     @Previewable @State var loginDetails: LoginDetails = LoginDetails()
     @Previewable @State var path: NavigationPath = NavigationPath()
 
-    EmailAccountTypeSelection($path).environment(loginDetails)
-
+    EmailAccountTypeSelection($path)
+        .environment(loginDetails)
 }

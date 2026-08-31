@@ -1,16 +1,10 @@
-//
-//  ManualServerSetup.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 8/18/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
 import Autoconfiguration
+import SwiftUI
 
 struct ManualServerSetup: View {
     init(_ loginDetails: LoginDetails) {
@@ -25,6 +19,7 @@ struct ManualServerSetup: View {
         self.incomingPort = tempAccount.incomingServer?.port
         self.outGoingHostname = tempAccount.outgoingServer?.hostname ?? ""
         self.outGoingPort = tempAccount.outgoingServer?.port
+        self.authConfig = tempAccount.authConfig
     }
 
     @Environment(AccountManager.self) private var accountManager: AccountManager
@@ -40,13 +35,13 @@ struct ManualServerSetup: View {
     @State private var manualConfig: Bool
     @State private var account: Account
     @State private var error: Error?
+    @State private var authConfig: OAuth2.Request?
 
     // MARK: View
     var body: some View {
         Form {
             if loginDetails.serverProtocol == .jmap {
                 Section(header: Text("account_server_edit_configuration")) {
-
                     TextEntryWrapper("account_server_settings_server_label", "server.example.com", $incomingHostname)
                     NumEntryWrapper("account_server_settings_port_label", "443", $incomingPort)
                     Picker("account_server_settings_authentication_label", selection: $incomingServer.authenticationType) {
@@ -56,21 +51,18 @@ struct ManualServerSetup: View {
                         }
                     }
                     AuthorizationView(
-                        $incomingServer.authorization,
+                        $account.authorization,
                         error: $error,
                         for: incomingServer.username,
-                        authenticationType: incomingServer.authenticationType
+                        authenticationType: incomingServer.authenticationType,
+                        authConfig: $authConfig
                     )
-
                     Toggle("account_server_settings_security_label", isOn: $inSelectedSecurity)
                         .tint(.accent)
                         .listRowSeparator(.hidden)
-
                 }
-
             } else {
                 Section(header: Text("account_incoming_server_label")) {
-
                     TextEntryWrapper("account_server_settings_server_label", "server.example.com", $incomingHostname)
                     NumEntryWrapper("account_server_settings_port_label", "443", $incomingPort)
                     Picker("account_server_settings_authentication_label", selection: $incomingServer.authenticationType) {
@@ -83,10 +75,11 @@ struct ManualServerSetup: View {
 
                     }
                     AuthorizationView(
-                        $incomingServer.authorization,
+                        $account.authorization,
                         error: $error,
                         for: incomingServer.username,
-                        authenticationType: incomingServer.authenticationType
+                        authenticationType: incomingServer.authenticationType,
+                        authConfig: $authConfig
                     )
                     Toggle("account_server_settings_security_label", isOn: $inSelectedSecurity)
                         .tint(.accent)
@@ -107,10 +100,11 @@ struct ManualServerSetup: View {
 
                     }
                     AuthorizationView(
-                        $outgoingServer.authorization,
+                        $account.authorization,
                         error: $error,
                         for: outgoingServer.username,
-                        authenticationType: outgoingServer.authenticationType
+                        authenticationType: outgoingServer.authenticationType,
+                        authConfig: $authConfig
                     )
                     Toggle("account_server_settings_security_label", isOn: $outSelectedSecurity)
                         .tint(.accent)
@@ -135,7 +129,6 @@ struct ManualServerSetup: View {
             Button(
                 action: {
                     // TODO: Need validation
-
                     incomingServer.connectionSecurity = inSelectedSecurity ? ConnectionSecurity.tls : ConnectionSecurity.none
                     incomingServer.hostname = incomingHostname
                     incomingServer.port = incomingPort ?? 443
@@ -154,7 +147,7 @@ struct ManualServerSetup: View {
                             outgoingServer
                         ]
                     }
-                    
+
                     do {
                         try accountManager.set(account)
                     } catch {
@@ -171,9 +164,10 @@ struct ManualServerSetup: View {
                 .padding()
         }
         .scrollContentBackground(.hidden)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
+        #endif
         .navigationTitle("account_server_manual_configuration")
-
     }
 }
 
@@ -181,7 +175,7 @@ struct ManualServerSetup: View {
     @Previewable @State var store = LocalStore()
     @Previewable @State var accountManager: AccountManager = AccountManager(store: store)
     @Previewable @State var loginDetails: LoginDetails = LoginDetails()
-    
+
     ManualServerSetup(loginDetails)
         .environment(accountManager)
         .environment(loginDetails)
@@ -189,7 +183,7 @@ struct ManualServerSetup: View {
 
 public extension Server {
     func clone() -> Self {
-        var server: Self = Server(
+        let server: Self = Server(
             serverProtocol,
             connectionSecurity: connectionSecurity,
             authenticationType: authenticationType,
@@ -197,12 +191,6 @@ public extension Server {
             hostname: hostname,
             port: port
         )
-        switch authorization {
-        case .basic(let user, let password): print("basic(user: \(user); password: \(password))")
-        case .oauth(let user, let password): print("oauth(user: \(user); password: \(password))")
-        case .none: print("none")
-        }
-        server.authorization = authorization
         return server
     }
 }

@@ -1,15 +1,10 @@
-//
-//  EmailCell.swift
-//  Thunderbird
-//
-//  Created by Ashley Soucar on 10/17/25.
-//
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import SwiftUI
 import Account
+import EmailAddress
+import SwiftUI
 
 struct EmailCellView: View {
     @Environment(FeatureFlags.self) private var flags: FeatureFlags
@@ -32,7 +27,7 @@ struct EmailCellView: View {
         self.bodyPreview = "ararara"
         self.dateSent = email.sent
         self.isThread = email.threadID.count > 0
-        
+
         // TODO: check flags
         self.unread = email.unread
         self.newEmail = email.newEmail
@@ -118,7 +113,7 @@ struct EmailCellView: View {
 #Preview("Email Cell") {
     @Previewable @State var flags: FeatureFlags = FeatureFlags(distribution: .current)
 
-    var tempEmail = TempEmail(
+    let tempEmail = TempEmail(
         from: [EmailAddress("sender1@test.com", label: "Sender1")],
         sender: [EmailAddress("sender1@test.com", label: "Sender1")],
         reply: [EmailAddress("sender1@test.com", label: "Sender1")],

@@ -5,7 +5,8 @@
 import Autoconfiguration
 import Foundation
 
-// Add canned configurations for supported OAuth providers.
+/// Thunderbird iOS specific OAuth2 Request objects for expected email providers
+/// > Note: TODO: Replace current Android ids and secrets with iOS specific ones as they are received
 extension OAuth2.Request: @retroactive CaseIterable {
 
     // MARK: AOL
@@ -54,7 +55,7 @@ extension OAuth2.Request: @retroactive CaseIterable {
             scope: [
                 "https://mail.google.com/"
             ],
-            clientID: "560629489500-no2mlau7e4vn3psh5esaiodgri09jrj9.apps.googleusercontent.com",
+            clientID: "769997220831-n207vus74snfmeoeagphatkrco9ckb7s.apps.googleusercontent.com",
             hosts: [
                 "googlemail.com",
                 "google.com",
@@ -91,7 +92,7 @@ extension OAuth2.Request: @retroactive CaseIterable {
         try! Self(
             authURI: "https://auth.tb.pro/realms/tbpro/protocol/openid-connect/auth",
             tokenURI: "https://auth.tb.pro/realms/tbpro/protocol/openid-connect/token",
-            redirectURI: "\(Bundle.main.schemes.first!)://oauth2redirect",
+            redirectURI: "\(Bundle.main.schemes.first!):/oauth2redirect",
             responseType: "code",
             scope: [
                 "openid",
@@ -99,7 +100,7 @@ extension OAuth2.Request: @retroactive CaseIterable {
                 "email",
                 "offline_access"
             ],
-            clientID: "mobile-android-thunderbird",
+            clientID: "mobile-ios-thunderbird",
             hosts: [
                 "tb.pro",
                 "thundermail.com"
