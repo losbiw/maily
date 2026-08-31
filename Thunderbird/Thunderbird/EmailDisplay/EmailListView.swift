@@ -32,10 +32,43 @@ struct EmailListView: View {
     }
 
     //TODO: replace with backend unread state call
-    func markAllRead() {
-        for email in emails {
-            email.unread = false
-            email.newEmail = false
+    func markSelectionAsRead() {
+        Task {
+            do {
+                try await session.markAsRead(emails: emails)
+                emails = try await session.loadEmails()
+            } catch {
+                self.error = error
+            }
+        }
+    }
+
+    func deleteSelection() {
+        Task {}
+    }
+
+    func loadEmails() {
+        Task {
+            do {
+                emails = try await session.loadEmails()
+            } catch {
+                self.error = EmailError.failedToLoad(error)
+            }
+        }
+    }
+
+    func loadMoreEmails() {
+        guard let oldestEmail = emails.last else {
+            return
+        }
+
+        Task {
+            do {
+                let additionalEmails = try await session.loadEmails(cursor: oldestEmail.uid)
+                emails.append(contentsOf: additionalEmails)
+            } catch {
+                self.error = error
+            }
         }
     }
 
@@ -184,7 +217,7 @@ struct EmailListView: View {
                         Button(
                             "mark_all_read_button",
                             action: {
-                                markAllRead()
+                                markSelectionAsRead()
                             })
                         Button(
                             "account_sign_out_button",
@@ -202,11 +235,7 @@ struct EmailListView: View {
             }
         }
         .onChange(of: session.selectedMailbox, initial: true) {
-            do {
-                emails = try session.loadEmails()
-            } catch {
-                self.error = EmailError.failedToLoad(error)
-            }
+            loadEmails()
         }
     }
 }

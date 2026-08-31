@@ -15,7 +15,7 @@ public final class SessionManager {
     private var store: LocalStore
     private var accountManager: AccountManager
     private var preferences: UserPreferencesManager
-    private var mailboxManager: UnifiedMailboxManager?
+    private var mailboxManager: MailboxManager?
 
     public var selectedAccount: Account? {
         guard let selectedAccountId = preferences.selectedAccountId else {
@@ -49,12 +49,12 @@ public final class SessionManager {
         // TODO: delete messages from the local DB here
     }
 
-    public func emails(cursor: UID? = nil) async throws -> [Email] {
+    public func loadEmails(cursor: UID? = nil) async throws -> [Email] {
         guard selectedMailbox != nil else {
             throw SessionError.noMailboxExists
         }
 
-        let emails = await mailboxManager?.emails(in: selectedMailbox!, cursor: cursor)
+        let emails = await mailboxManager!.emails(in: selectedMailbox!, cursor: cursor)
 
         return emails ?? []
     }

@@ -7,14 +7,14 @@ import MIME
 import NIOIMAPCore
 
 extension [EmailAddressListElement] {
-    var addresses: [EmailAddressProtocol] { map { $0.address } }
+    var addresses: [MailAddress] { map { $0.address } }
 }
 
 extension EmailAddressListElement {
-    var address: EmailAddressProtocol {
+    var address: MailAddress {
         switch self {
-        case .singleAddress(let address): EmailAddress(stringLiteral: "\(address)")
-        case .group(let group): EmailAddress.Group(group.children.addresses, label: "\(group)")
+        case .singleAddress(let address): .address(EmailAddress(stringLiteral: "\(address)"))
+        case .group(let group): .group(label: "\(group)", members: group.children.addresses)
         }
     }
 }

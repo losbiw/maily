@@ -8,7 +8,7 @@ import Foundation
 ///
 /// `Body` contains a single ``Part`` that is either multipart or text ``ContentType``.
 /// `Body` encodes and decodes complete plain text or MIME message bodies using `RawRepresentable` conformance.
-public struct Body: CustomStringConvertible, RawRepresentable, Sendable {
+public struct Body: CustomStringConvertible, RawRepresentable, Sendable, Hashable {
     public let part: Part
 
     public var headers: [Header] {

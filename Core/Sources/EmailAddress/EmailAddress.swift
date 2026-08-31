@@ -4,12 +4,43 @@
 
 import Foundation
 
-public protocol EmailAddressProtocol: Sendable {
-    var addresses: [EmailAddress] { get }
+/// A mailbox address or an RFC address group.
+public indirect enum MailAddress: Sendable, Hashable, Codable, Identifiable {
+    case address(EmailAddress)
+    case group(label: String?, members: [MailAddress])
+
+    /// Individual mailbox addresses contained by this value, recursively.
+    public var addresses: [EmailAddress] {
+        switch self {
+        case .address(let address):
+            [address]
+        case .group(_, let members):
+            members.flatMap(\.addresses)
+        }
+    }
+
+    /// A concise label suitable for message-list UI.
+    public var displayName: String {
+        switch self {
+        case .address(let address):
+            address.label ?? address.value
+        case .group(let label, let members):
+            label ?? members.first?.displayName ?? ""
+        }
+    }
+
+    public var id: String {
+        switch self {
+        case .address(let address):
+            "address:\(address.id)"
+        case .group(let label, let members):
+            "group:\(label ?? ""):\(members.map(\.id).joined(separator: ","))"
+        }
+    }
 }
 
 /// Shared email address model suitable for IMAP, JMAP and SMTP
-public struct EmailAddress: CustomStringConvertible, EmailAddressProtocol, ExpressibleByStringLiteral, Hashable, Identifiable, Sendable {
+public struct EmailAddress: CustomStringConvertible, ExpressibleByStringLiteral, Hashable, Identifiable, Sendable, Codable {
     public let value: String
     public let label: String?
 
@@ -38,9 +69,6 @@ public struct EmailAddress: CustomStringConvertible, EmailAddressProtocol, Expre
     // MARK: CustomStringConvertible
     public var description: String { !(label ?? "").isEmpty ? "\(label!) <\(value)>" : value }
 
-    // MARK: EmailAddressProtocol
-    public var addresses: [Self] { [self] }
-
     // MARK: ExpressibleByStringLiteral
     public init(stringLiteral value: StringLiteralType) {
         self.init(value)
@@ -48,28 +76,4 @@ public struct EmailAddress: CustomStringConvertible, EmailAddressProtocol, Expre
 
     // MARK: Identifiable
     public var id: String { value }
-}
-
-extension EmailAddress {
-
-    /// Shared email address group/list model suitable for IMAP and JMAP
-    public struct Group: EmailAddressProtocol, Equatable, Sendable {
-        public let label: String?
-        public let email: [EmailAddressProtocol]
-
-        public init(_ email: [EmailAddressProtocol], label: String? = nil) {
-            let label: String = label?.trimmed() ?? ""
-            self.label = !label.isEmpty ? label : nil
-            self.email = email
-        }
-
-        // MARK: EmailAddressProtocol
-        public var addresses: [EmailAddress] { email.flatMap { $0.addresses } }
-
-        // MARK: Equatable
-        public static func == (lhs: Self, rhs: Self) -> Bool {
-            // Equality ignores labels, positions and grouping
-            lhs.addresses.map({ $0.id }).sorted() == rhs.addresses.map({ $0.id }).sorted()
-        }
-    }
 }

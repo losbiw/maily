@@ -100,16 +100,16 @@ private extension IMAP.Message {
                 subject: "Email activity on account",
                 date: InternetMessageDate(Date(timeIntervalSince1970: 1779277275.0)),
                 from: [
-                    EmailAddress("from@aol.com")
+                    .address(EmailAddress("from@aol.com"))
                 ],
                 sender: [
-                    EmailAddress("sender@aol.com")
+                    .address(EmailAddress("sender@aol.com"))
                 ],
                 reply: [
-                    EmailAddress("reply@aol.com")
+                    .address(EmailAddress("reply@aol.com"))
                 ],
                 to: [
-                    EmailAddress("example@aol.com", label: "Example")
+                    .address(EmailAddress("example@aol.com", label: "Example"))
                 ],
                 cc: [],
                 bcc: [],
@@ -134,18 +134,18 @@ private extension IMAP.Message {
                 subject: "Summer Sale Ends Tomorrow!",
                 date: InternetMessageDate(Date(timeIntervalSince1970: 1781993898.0)),
                 from: [
-                    EmailAddress("list@example.com", label: "Mailing List")
+                    .address(EmailAddress("list@example.com", label: "Mailing List"))
                 ],
                 sender: [],
                 reply: [
-                    EmailAddress("reply@example.com")
+                    .address(EmailAddress("reply@example.com"))
                 ],
                 to: [
-                    EmailAddress("example@gmail.com", label: "Example")
+                    .address(EmailAddress("example@gmail.com", label: "Example"))
                 ],
                 cc: [
-                    EmailAddress("copied@gmail.com"),
-                    EmailAddress("cc@example.com")
+                    .address(EmailAddress("copied@gmail.com")),
+                    .address(EmailAddress("cc@example.com"))
                 ],
                 bcc: [],
                 inReplyTo: nil,
@@ -184,11 +184,11 @@ private extension JMAP.Email {
             references: nil,
             sender: nil,
             from: [
-                EmailAddress("help@fastmail.com", label: "Fastmail")
+                .address(EmailAddress("help@fastmail.com", label: "Fastmail"))
             ],
             replyTo: nil,
             to: [
-                EmailAddress("example@fastmail.com")
+                .address(EmailAddress("example@fastmail.com"))
             ],
             cc: nil,
             bcc: nil,

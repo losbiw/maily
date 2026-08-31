@@ -10,27 +10,25 @@ struct EmailCellView: View {
     @Environment(FeatureFlags.self) private var flags: FeatureFlags
     let sender: String
     let subject: String
-    let bodyPreview: String
+    let preview: String?
     let dateSent: Date?
 
     // For alignment, bool check likely not final
     let unread: Bool
-    let newEmail: Bool
     let pinned: Bool
     let hasAttachment: Bool
     let isThread: Bool
 
     init(email: Email) {
-        self.sender = email.from[0].addresses.label ?? email.from[0].addresses.value
+        self.sender = email.from[0].addresses[0].label ?? email.from[0].addresses[0].value
         self.subject = email.subject ?? ""
         // FIXME: fetch the preview independently somewhere or make a separate field for it
-        self.bodyPreview = "ararara"
+        self.preview = email.preview
         self.dateSent = email.sent
         self.isThread = email.threadID.count > 0
 
         // TODO: check flags
         self.unread = email.unread
-        self.newEmail = email.newEmail
         self.hasAttachment = email.attachments != nil
         self.pinned = email.pinned
     }
@@ -65,11 +63,7 @@ struct EmailCellView: View {
             .padding(.leading, pinned ? 0 : 20)
 
             HStack {
-                if newEmail {
-                    Image(systemName: "circle")
-                        .foregroundStyle(.accent)
-                        .font(.system(size: 8))
-                } else if unread {
+                if unread {
                     Image(systemName: "circle.fill")
                         .foregroundStyle(.accent)
                         .font(.system(size: 8))
@@ -99,13 +93,15 @@ struct EmailCellView: View {
                         )
                 }
             }
-            .padding(.leading, newEmail || unread ? 0 : 20)
+            .padding(.leading, unread ? 0 : 20)
 
-            Text(bodyPreview)
-                .lineLimit(1)
-                .foregroundColor(.muted)
-                .font(.footnote)
-                .padding(.leading, 20)
+            if preview != nil {
+                Text(preview!)
+                    .lineLimit(1)
+                    .foregroundColor(.muted)
+                    .font(.footnote)
+                    .padding(.leading, 20)
+            }
         }
     }
 }

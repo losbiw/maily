@@ -10,24 +10,24 @@ import NIOIMAPCore
 public struct Envelope: Sendable {
     public let subject: String?
     public let date: InternetMessageDate?
-    public let from: [EmailAddressProtocol]
-    public let sender: [EmailAddressProtocol]
-    public let reply: [EmailAddressProtocol]
-    public let to: [EmailAddressProtocol]
-    public let cc: [EmailAddressProtocol]
-    public let bcc: [EmailAddressProtocol]
+    public let from: [MailAddress]
+    public let sender: [MailAddress]
+    public let reply: [MailAddress]
+    public let to: [MailAddress]
+    public let cc: [MailAddress]
+    public let bcc: [MailAddress]
     public let inReplyTo: String?
     public let messageID: String?
 
     public init(
         subject: String? = nil,
         date: InternetMessageDate? = nil,
-        from: [EmailAddressProtocol] = [],
-        sender: [EmailAddressProtocol] = [],
-        reply: [EmailAddressProtocol] = [],
-        to: [EmailAddressProtocol] = [],
-        cc: [EmailAddressProtocol] = [],
-        bcc: [EmailAddressProtocol] = [],
+        from: [MailAddress] = [],
+        sender: [MailAddress] = [],
+        reply: [MailAddress] = [],
+        to: [MailAddress] = [],
+        cc: [MailAddress] = [],
+        bcc: [MailAddress] = [],
         inReplyTo: String? = nil,
         messageID: String? = nil,
     ) {

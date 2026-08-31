@@ -29,12 +29,18 @@ public final class MailboxManager {
     
     public func emailWithBody(for uid: UID, in mailbox: Mailbox) async -> Email? {
         do {
+            if let cached = try store.loadEmailBody(for: uid, in: mailbox.name), cached.body != nil {
+                return cached
+            }
+
             switch account.emailProtocol {
             case .imap:
                 let client: IMAPClient = try await account.imapClient
                 try await client.select(mailbox: IMAP.Mailbox.Name(mailbox.name))
                 let message: Message = try await client.fetch(uid: uid) // fetches the entire body by default
-                return Email(message)
+                let email = Email(message)
+                try store.cacheEmails(in: mailbox.name, emails: [email])
+                return email
             case .jmap:
                 return nil
             }
@@ -48,7 +54,7 @@ public final class MailboxManager {
         return Array(Set(cached + new)).sorted().reversed()
     }
 
-    public func emails(in mailbox: Mailbox, cursor: UID?) async {
+    public func emails(in mailbox: Mailbox, cursor: UID?) async -> [Email] {
         do {
             let cache = try store.loadEmails(for: mailbox.name, cursor: cursor)
 

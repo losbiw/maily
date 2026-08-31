@@ -92,12 +92,12 @@ public struct Email: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let messageID: [String]?
     public let inReplyTo: [String]?
     public let references: [String]?
-    public let sender: [EmailAddressProtocol]?
-    public let from: [EmailAddressProtocol]?
-    public let replyTo: [EmailAddressProtocol]?
-    public let to: [EmailAddressProtocol]?
-    public let cc: [EmailAddressProtocol]?
-    public let bcc: [EmailAddressProtocol]?
+    public let sender: [MailAddress]?
+    public let from: [MailAddress]?
+    public let replyTo: [MailAddress]?
+    public let to: [MailAddress]?
+    public let cc: [MailAddress]?
+    public let bcc: [MailAddress]?
     public let subject: String?
     public let bodyStructure: BodyPart?
     // public let bodyValues: Any?
@@ -118,12 +118,12 @@ public struct Email: Decodable, Equatable, Hashable, Identifiable, Sendable {
         messageID: [String]? = nil,
         inReplyTo: [String]? = nil,
         references: [String]? = nil,
-        sender: [EmailAddressProtocol]? = nil,
-        from: [EmailAddressProtocol]? = nil,
-        replyTo: [EmailAddressProtocol]? = nil,
-        to: [EmailAddressProtocol]? = nil,
-        cc: [EmailAddressProtocol]? = nil,
-        bcc: [EmailAddressProtocol]? = nil,
+        sender: [MailAddress]? = nil,
+        from: [MailAddress]? = nil,
+        replyTo: [MailAddress]? = nil,
+        to: [MailAddress]? = nil,
+        cc: [MailAddress]? = nil,
+        bcc: [MailAddress]? = nil,
         subject: String? = nil,
         bodyStructure: BodyPart? = nil,
         textBody: [BodyPart] = [],
@@ -173,12 +173,12 @@ public struct Email: Decodable, Equatable, Hashable, Identifiable, Sendable {
         messageID = try container.decodeIfPresent([String].self, forKey: .messageId)
         inReplyTo = try container.decodeIfPresent([String].self, forKey: .inReplyTo)
         references = try container.decodeIfPresent([String].self, forKey: .references)
-        sender = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .sender)
-        from = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .from)?.erased()
-        replyTo = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .replyTo)?.erased()
-        to = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .to)?.erased()
-        cc = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .cc)?.erased()
-        bcc = try container.decodeIfPresent([EmailAddress.Group].self, forKey: .bcc)?.erased()
+        sender = try container.decodeIfPresent([MailAddress].self, forKey: .sender)
+        from = try container.decodeIfPresent([MailAddress].self, forKey: .from)
+        replyTo = try container.decodeIfPresent([MailAddress].self, forKey: .replyTo)
+        to = try container.decodeIfPresent([MailAddress].self, forKey: .to)
+        cc = try container.decodeIfPresent([MailAddress].self, forKey: .cc)
+        bcc = try container.decodeIfPresent([MailAddress].self, forKey: .bcc)
         subject = try container.decodeIfPresent(String.self, forKey: .subject)
         bodyStructure = try container.decodeIfPresent(BodyPart.self, forKey: .bodyStructure)
         textBody = try container.decode([BodyPart].self, forKey: .textBody)

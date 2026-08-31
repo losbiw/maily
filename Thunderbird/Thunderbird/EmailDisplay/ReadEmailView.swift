@@ -238,11 +238,11 @@ struct SenderView: View {
         date = email.sent!
     }
 
-    private var from: [EmailAddressProtocol]
-    private var sender: [EmailAddressProtocol]
-    private var replyTo: [EmailAddressProtocol]
-    private var recipients: [EmailAddressProtocol]
-    private var toText: [EmailAddressProtocol]
+    private var from: [MailAddress]
+    private var sender: [MailAddress]
+    private var replyTo: [MailAddress]
+    private var recipients: [MailAddress]
+    private var toText: [MailAddress]
     private var date: Date
     @State private var showSenderRecipientInfo = false
     @State private var showEmailOptions = false
@@ -253,10 +253,10 @@ struct SenderView: View {
                 let fromDisplayValue = from[0].addresses[0]
 
                 HStack {
-                    Text(fromDisplayValue.label ?? fromDisplayValue.value).font(.title3)
+                    Text(from.first?.displayName ?? "").font(.title3)
                 }
                 HStack {
-                    Text("To: \(toText[0].addresses[0].label ?? toText[0].addresses[0].value)")
+                    Text("To: \(toText.first?.displayName ?? "")")
                     if recipients.count > 0 {
                         Text("+\(recipients.count)")
                     }
@@ -332,31 +332,31 @@ struct SenderView: View {
 
                 List {
                     Section(header: Text("from_header")) {
-                        ForEach(from) { person in
-                            ContactCellView(contact: person.addresses[0])
+                        ForEach(from.flatMap(\.addresses)) { person in
+                            ContactCellView(contact: person)
                         }
                     }.listRowSeparator(.hidden)
 
                     if !sender.isEmpty {
                         Section(header: Text("sender_header")) {
-                            ForEach(sender) { person in
+                            ForEach(sender.flatMap(\.addresses)) { person in
                                 ContactCellView(contact: person)
                             }
                         }.listRowSeparator(.hidden)
                     }
                     if !replyTo.isEmpty {
                         Section(header: Text("reply_to_header")) {
-                            ForEach(replyTo) { person in
+                            ForEach(replyTo.flatMap(\.addresses)) { person in
                                 ContactCellView(contact: person)
                             }
                         }.listRowSeparator(.hidden)
                     }
                     Section(header: Text("to_header")) {
-                        ForEach(toText) { person in
+                        ForEach(toText.flatMap(\.addresses)) { person in
                             ContactCellView(contact: person)
                         }
                         if !recipients.isEmpty {
-                            ForEach(recipients) { person in
+                            ForEach(recipients.flatMap(\.addresses)) { person in
                                 ContactCellView(contact: person)
                             }
                         }

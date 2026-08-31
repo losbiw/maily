@@ -9,32 +9,24 @@ import Testing
 
 struct EmailAddressTests {
 
-    // MARK: Codable
-    @Test func encode() throws {
-        /*
-        #expect(try JSONEncoder().encode(EmailAddress("name@example.com", label: "Example Name")) == "\"Example Name <name@example.com>\"".data(using: .utf8))
-        #expect(try JSONEncoder().encode(EmailAddress("name@example.com")) == "\"name@example.com\"".data(using: .utf8)) */
-    }
-
     @Test func decoderInit() throws {
-        let emailAddresses: [EmailAddressProtocol] = try JSONDecoder().decode([EmailAddress.Group].self, from: data).erased()
+        let emailAddresses = try JSONDecoder().decode([MailAddress].self, from: data)
         #expect(emailAddresses.count == 5)
-        #expect((emailAddresses[0] as? EmailAddress.Group)?.name == "Named Group")
-        #expect((emailAddresses[0] as? EmailAddress.Group)?.addresses.count == 2)
-        #expect((emailAddresses[1] as? EmailAddress)?.email == "emptyname@example.com")
-        #expect((emailAddresses[1] as? EmailAddress)?.name == nil)
-        #expect((emailAddresses[2] as? EmailAddress)?.email == "nullname@example.com")
-        #expect((emailAddresses[2] as? EmailAddress)?.name == nil)
-        #expect((emailAddresses[3] as? EmailAddress)?.email == "noname@example.com")
-        #expect((emailAddresses[3] as? EmailAddress)?.name == nil)
-        #expect((emailAddresses[4] as? EmailAddress)?.email == "name@example.com")
-        #expect((emailAddresses[4] as? EmailAddress)?.name == "Named Example")
+        #expect(emailAddresses[0] == .group(label: "Named Group", members: [
+            .address(EmailAddress("name@example.com", label: "Named Example")),
+            .address(EmailAddress("noname@example.com"))
+        ]))
+        #expect(emailAddresses[1] == .address(EmailAddress("emptyname@example.com")))
+        #expect(emailAddresses[2] == .address(EmailAddress("nullname@example.com")))
+        #expect(emailAddresses[3] == .group(label: nil, members: [
+            .address(EmailAddress("noname@example.com"))
+        ]))
+        #expect(emailAddresses[4] == .address(EmailAddress("name@example.com", label: "Named Example")))
 
         // Test backward compatibility with previous encoding as string
         let string: Data = "\"Named Example <name@example.com>\"".data(using: .utf8)!
-        let emailAddress: EmailAddress = try JSONDecoder().decode(EmailAddress.self, from: string)
-        #expect(emailAddress.email == "name@example.com")
-        #expect(emailAddress.name == "Named Example")
+        let emailAddress = try JSONDecoder().decode(MailAddress.self, from: string)
+        #expect(emailAddress == .address(EmailAddress("name@example.com", label: "Named Example")))
     }
 }
 

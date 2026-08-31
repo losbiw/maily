@@ -7,15 +7,16 @@ import Foundation
 import IMAP
 import JMAP
 import MIME
+import GRDB
 
 /// Common `Email` model represents and losslessly converts to and from both ``IMAP.Message`` and ``JMAP.Email``
-public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable, Hashable {
-    public let from: [EmailAddressProtocol]
-    public let sender: [EmailAddressProtocol]
-    public let replyTo: [EmailAddressProtocol]
-    public let to: [EmailAddressProtocol]
-    public let bcc: [EmailAddressProtocol]
-    public let cc: [EmailAddressProtocol]
+public struct Email: CustomStringConvertible, Identifiable, Sendable, Hashable {
+    public let from: [MailAddress]
+    public let sender: [MailAddress]
+    public let replyTo: [MailAddress]
+    public let to: [MailAddress]
+    public let bcc: [MailAddress]
+    public let cc: [MailAddress]
     public let received: Date?  // IMAP internal message date
     public let sent: Date?  // IMAP envelope date
     public let messageID: [String]
@@ -25,17 +26,17 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
     public let body: EmailBody?
     public let blobID: String?
     public let uid: UID?
-    public let snippet: String?
+    public let preview: String?
     // TODO: unify flags for IMAP + JMAP
-    public let flags: Set<Flag>
+    public let flags: Set<UnifiedFlag>
 
     public init(
-        from: [EmailAddressProtocol] = [],
-        sender: [EmailAddressProtocol] = [],
-        replyTo: [EmailAddressProtocol] = [],
-        to: [EmailAddressProtocol] = [],
-        bcc: [EmailAddressProtocol] = [],
-        cc: [EmailAddressProtocol] = [],
+        from: [MailAddress] = [],
+        sender: [MailAddress] = [],
+        replyTo: [MailAddress] = [],
+        to: [MailAddress] = [],
+        bcc: [MailAddress] = [],
+        cc: [MailAddress] = [],
         received: Date? = nil,
         sent: Date? = nil,
         messageID: [String] = [],
@@ -46,7 +47,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
         blobID: String? = nil,
         flags: Set<Flag>,
         uid: UID? = nil,
-        snippet: String? = nil,
+        preview: String? = nil,
         id: String? = nil
     ) {
         self.from = from
@@ -65,7 +66,7 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
         self.blobID = blobID
         self.flags = flags
         self.uid = uid
-        self.snippet = snippet
+        self.preview = preview
         self.id = id ?? UUID().uuidString(1)
     }
 
@@ -74,6 +75,34 @@ public struct Email: CustomStringConvertible, Identifiable, Sendable, Comparable
 
     // MARK: Identifiable
     public let id: String  // IMAP message ID
+}
+
+extension Email {
+    public init(_ record: EmailRecord, body: Body?) {
+        self.from = record.from
+        self.sender = record.sender
+        self.replyTo = record.replyTo
+        self.to = record.to
+        self.bcc = record.bcc
+        self.cc = record.cc
+        self.received = record.received
+        self.sent = record.sent
+        self.messageID = record.messageID
+        self.threadID = record.threadID
+        self.inReplyTo = record.inReplyTo
+        self.subject = record.subject
+        self.blobID = record.blobID
+        self.body = body
+        self.flags = record.flags
+        self.uid = record.uid
+        self.preview = record.preview
+        self.id = record.id
+    }
+}
+
+// UI-related properties
+extension Email {
+    public var unread: Bool { flags.contains(.seen) }
 }
 
 extension Email {
@@ -111,7 +140,7 @@ extension Email {
             body: try? EmailBody(body: message.body),
             flags: message.flags,
             uid: message.uid,
-            snippet: message.snippet,
+            preview: message.preview,
             id: message.emailID ?? message.gmailID
         )
     }
@@ -136,7 +165,7 @@ extension Email {
             // FIXME: replace the flags placeholder
             flags: Set(),
             uid: UID(rawValue: UInt32(1)),
-            snippet: email.preview,
+            preview: email.preview,
             id: email.id
         )
     }
@@ -246,4 +275,105 @@ extension Date {
 
 private extension UInt64 {
     static let gmailIDFloor: Self = 1_000_000_000_000
+}
+
+// lossless conversion to a unified model from IMAP flags/JMAP keywords
+
+public enum UnifiedFlag: Hashable, Sendable, Codable {
+    case seen
+    case answered
+    case flagged
+    case draft
+    case deleted
+    case keyword(String)
+}
+
+private extension Flag {
+    func normalize(rawFlag: String) -> String {
+        if rawFlag.starts(with: "\\") {
+            return String(rawFlag.dropFirst(2))
+        }
+        
+        return rawFlag
+    }
+    
+    init(flag: UnifiedFlag) {
+        switch flag {
+        case .seen:
+            self = .seen
+        case .answered:
+            self = .answered
+        case .flagged:
+            self = .flagged
+        case .deleted:
+            self = .deleted
+        case .draft:
+            self = .draft
+        case .keyword(let value):
+            self = Self.init(normalize(rawFlag: value))
+        }
+    }
+}
+
+private extension JMAP.Email.Keyword {
+    func normalize(rawFlag: String) -> String {
+        if rawFlag.starts(with: "$") {
+            return String(rawFlag.dropFirst())
+        }
+        
+        return rawFlag
+    }
+    
+    init(flag: UnifiedFlag) {
+        switch flag {
+        case .seen:
+            self = .seen
+        case .answered:
+            self = .answered
+        case .flagged:
+            self = .flagged
+        case .deleted:
+            self = .deleted
+        case .draft:
+            self = .draft
+        case .keyword(let value):
+            self = Flag.extension(value)
+        }
+    }
+}
+
+private extension UnifiedFlag {
+    func toIMAP(rawFlag: String) -> String {
+        if rawFlag.starts(with: "\\") {
+            return String(rawFlag.dropFirst(2))
+        }
+        
+        return rawFlag
+    }
+    
+    func to(rawFlag: String) -> String {
+        if rawFlag.starts(with: "\\") {
+            return String(rawFlag.dropFirst(2))
+        }
+        
+        return rawFlag
+    }
+    
+    init(imapFlag: Flag) {
+        switch imapFlag {
+        case .seen:
+            self = .seen
+        case .answered:
+            self = .answered
+        case .flagged:
+            self = .flagged
+        case .deleted:
+            self = .deleted
+        case .draft:
+            self = .draft
+        default:
+            // custom IMAP flags start with a backslash so we drop it
+            self = .keyword(String(imapFlag).dropFirst())
+        }
+    }
 }
